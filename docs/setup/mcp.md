@@ -11,7 +11,7 @@
 En claude.ai → Settings → Connectors → agregar **Context7** (ya te apareció la tarjeta en el chat). Es remoto; no instala nada en tu PC.
 
 ## 2. Engram (servidor local)
-Parece que ya lo tenés instalado (existe `%USERPROFILE%\.engram`). Verificalo en una terminal:
+Parece que ya lo tenés instalado (existe la carpeta `%USERPROFILE%\.engram`). Verificalo en una terminal:
 
 ```powershell
 engram version

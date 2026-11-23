@@ -9,8 +9,9 @@ Sistema integral de gestión de gimnasios — **SaaS multi-gimnasio** con opció
 | Backend | Java 25 LTS · Spring Boot 4.1 · Spring Security · Spring Modulith · Flyway |
 | Frontend | Angular 22 · PWA |
 | Base de datos | MySQL 8.4 LTS — `gym_platform` (catálogo) + una base por gimnasio (`gym_001`, `gym_002`, …) |
-| Infra | Docker / Docker Compose · MinIO (S3) para multimedia |
-| Tests | JUnit 5 · Testcontainers (MySQL real) · Angular testing · e2e |
+| Infra | Docker / Docker Compose · multimedia en disco del servidor (ADR-0004) · Mailpit (correo de desarrollo) |
+| Tests | JUnit 5 · Spring Modulith (límites entre módulos) · Testcontainers (MySQL real) · Angular testing · e2e |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) · Dependabot |
 
 ## Estructura
 

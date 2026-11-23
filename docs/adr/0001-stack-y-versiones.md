@@ -26,11 +26,11 @@ Además, una versión que solo está escrita en un documento no protege nada. Ti
 |---|---|---|---|
 | Java (JDK) | **25 LTS** (Temurin recomendado) | `backend/pom.xml` → `java.version` + Maven Enforcer `[25,26)` | LTS; la próxima LTS es Java 29 (sept. 2027) |
 | Spring Boot | **4.1.2** | `backend/pom.xml` → `spring-boot-starter-parent` | OSS hasta ~junio 2027 |
-| Maven | **3.9.x** (mín. 3.9.9) | Maven Enforcer + Maven Wrapper (`mvnw`) | — |
+| Maven | **3.9.14** (mín. 3.9.9) | Maven Enforcer + Maven Wrapper (`backend/.mvn/wrapper/maven-wrapper.properties`) | — |
 | MySQL | **8.4.13 LTS** | `infra/docker-compose.yml` y `backend/pom.xml` → `mysql.image` (un test verifica que coincidan) | Premier hasta ~abril 2029, extendido hasta ~2032 |
 | Testcontainers | la que gestiona Spring Boot 4.1.2 (línea 2.0.x) | BOM de Spring Boot (no se repite la versión) | — |
 | Flyway | la que gestiona Spring Boot 4.1.2 | BOM de Spring Boot (se agrega en el paso 0.3) | — |
-| Spring Modulith | la alineada con Spring Boot 4.1 | BOM de Spring Modulith (se agrega en el paso 0.2) | — |
+| Spring Modulith | **2.1.1** (línea 2.1 = Boot 4.1) | `backend/pom.xml` → `spring-modulith.version` + BOM | Al pasar a Boot 4.2 → Modulith 2.2 |
 | Tests e2e | Playwright | se agrega con el primer flujo crítico del frontend | — |
 | Angular | **22.3.0** (exacto, sin `^`) | `frontend/package.json` + `.npmrc save-exact` | Activa hasta jun. 2027, LTS hasta jun. 2028 |
 | Node.js | **24 LTS** recomendado (mín. 22.22) | `.nvmrc` + `engines` en `package.json` + `engine-strict` | Node 24 LTS hasta abril 2028 |

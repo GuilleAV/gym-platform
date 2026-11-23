@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — paso 0.1 cerrado, sigue el 0.2
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — paso 0.2 en curso (rama `feature/paso-0-2`)
 
 ---
 
@@ -19,24 +19,39 @@
   - Tests guardianes del compose: imágenes con versión exacta, puertos solo en 127.0.0.1, compose = pom.
   - Consola y correos en UTF-8 (`backend/.mvn/jvm.config`).
 
+- [~] **Paso 0.2 — EN CURSO** (rama `feature/paso-0-2`, sin mergear):
+  - Spring Modulith **2.1.1** (BOM en el pom) + `ModularidadTest`: `verify()` (límites y ciclos), guardia
+    anti-"verificación en vacío" y diagramas PlantUML en `target/spring-modulith-docs`.
+  - `.github/workflows/ci.yml`: backend (`./mvnw verify` con Testcontainers) y frontend (`npm ci`, tests, build)
+    en paralelo, permisos mínimos, cancelación de corridas viejas, reportes si falla.
+  - `.github/dependabot.yml`: maven, npm (Angular agrupado), github-actions y docker-compose (MySQL fijo en 8.4).
+  - ADR-0001: Maven 3.9.14 y Spring Modulith 2.1.1 fijados.
+  - **Falta:** generar el Maven Wrapper en IntelliJ, correr `verify` y (con el repo en GitHub) ver la CI en verde.
+
 ## Pendiente del usuario
+
+> Las notas personales y de la PC están en `docs/privado/notas-personales.md` (fuera de Git).
 
 - [ ] **Confirmar el stack:** Java 25 LTS, Spring Boot 4.1, MySQL 8.4 LTS, Angular 22. Si se aprueba, ADR-0001 pasa a **Aceptado**.
 - [ ] **Decidir el MVP:** ¿pasar el "comercial mínimo + caja de recepción" a la Fase 1? (ver revisión §2.1).
 - [ ] **Copiar los 3 `.docx` originales** a `docs/especificacion/`.
+- [ ] **MCP Engram:** instalado pero todavía no aparece en Claude (detalle en las notas privadas).
 - [ ] **Crear el repo privado `gym-platform` en GitHub** (vacío, sin README) y hacer:
   ```powershell
   cd C:\Gimnasio
   git remote add origin https://github.com/GuilleAV/gym-platform.git
   git push -u origin main
   ```
-- [ ] **MCP Engram:** instalado (`%USERPROFILE%\go\bin\engram.exe`) pero **todavía no aparece en Claude**.
-  - Claude Desktop está instalado desde la Microsoft Store (MSIX), así que su configuración está en
-    `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json`.
-  - Ya se escribió la entrada `engram` (command = ruta al exe, args = `["mcp"]`).
-  - Próxima verificación: probar en una conversación nueva después de reiniciar Claude por completo. Si no aparece, revisar el contenido del JSON y la hora de inicio del proceso Claude.
 
 ## Decisiones abiertas (bloquean la Fase 0, ver revisión §3)
+
+> **ADR-0002 ACEPTADO (23/11/2026)** → `docs/adr/0002-sesiones-secretos-y-conexiones-por-tenant.md`.
+> Cubre las decisiones 1 a 4. Cambio respecto de la revisión: los secretos generados por el alta
+> automática van **cifrados en `gym_platform`** (AES-256-GCM, clave maestra fuera de la base), porque
+> con solo variables de entorno el alta automática no puede funcionar sin reiniciar la app.
+> **ADR-0003 redactado (Propuesto)** → `docs/adr/0003-superadministrador-y-sesion-de-soporte.md` (decisión 5,
+> sesión de soporte con aprobación del gimnasio, modo emergencia, recuperación del único admin).
+> Falta: que el usuario apruebe ADR-0003. Con eso arranca el paso 0.3.
 
 | # | Decisión | Propuesta | ADR |
 |---|---|---|---|
@@ -53,11 +68,11 @@
 1. **Verificar los tests de integración** (no se confirmó al cerrar el 0.1): con Docker abierto, en IntelliJ →
    Maven → Lifecycle → `verify`. Tienen que pasar `MysqlVersionIT` y `CorreoNotificadorAlertasIT`.
    Si fallan, es lo primero que se corrige.
-2. **Paso 0.2** (rama `feature/paso-0-2`):
-   - Maven Wrapper (`mvnw`) commiteado.
-   - **Spring Modulith**: test que verifica que los módulos no usen clases internas de otros.
-   - **CI en GitHub Actions**: build + tests unitarios + integración (Testcontainers) en cada PR. Requiere el repo en GitHub (ver "Pendiente del usuario").
-   - Dependabot para avisos de versiones y CVEs.
+2. **Cerrar el paso 0.2** (rama `feature/paso-0-2`):
+   - Generar el wrapper en IntelliJ: Maven → *Execute Maven Goal* → `mvn -N wrapper:wrapper -Dmaven=3.9.14 -Dtype=only-script`
+     (con `backend` como proyecto). Claude lo commitea y marca `mvnw` como ejecutable (`git update-index --chmod=+x`).
+   - `verify` en IntelliJ: tienen que pasar `ModularidadTest`, `MysqlVersionIT` y `CorreoNotificadorAlertasIT`.
+   - Subir a GitHub, abrir PR a `main`, ver la CI en verde. Activar *Dependabot alerts* y *branch protection* en `main`.
 3. **Antes del 0.3:** redactar ADR-0002 (sesiones, secretos, usuario de aprovisionamiento, pools) y ADR-0003 (superadmin). Son las decisiones abiertas de la tabla de arriba.
 
 Plan completo de la Fase 0:
@@ -65,7 +80,7 @@ Plan completo de la Fase 0:
 | Paso | Contenido | Estado |
 |---|---|---|
 | 0.1 | docker-compose (MySQL, Mailpit), versiones fijadas, almacenamiento (ADR-0004), aviso de disco | ✅ cerrado |
-| 0.2 | Maven Wrapper + Spring Modulith + CI en GitHub Actions + Dependabot | ⏭️ siguiente |
+| 0.2 | Maven Wrapper + Spring Modulith + CI en GitHub Actions + Dependabot | 🔨 en curso |
 | 0.3 | Base `gym_platform` con Flyway (gimnasio, dominio, conexión) | |
 | 0.4 | Resolución del tenant (dominio → base), con limpieza del contexto | |
 | 0.5 | Aprovisionamiento idempotente de gym_001 y gym_002 | |

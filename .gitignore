@@ -1,15 +1,38 @@
 # ===== Secretos (NUNCA al repo) =====
+# Regla general: los secretos viven en .env (local) o en variables de entorno / gestor de
+# secretos (servidor). Si un archivo necesita una clave para funcionar, va acá.
 .env
 .env.*
+*.env
 !.env.example
+# Claves y certificados (TLS, firma de facturas ARCA, SSH)
 *.pem
 *.key
 *.p12
 *.pfx
 *.crt
+*.cer
+*.csr
+*.jks
+*.keystore
+*.jceks
+id_rsa*
+id_ed25519*
+# Archivos de credenciales de servicios (Google, cloud, etc.)
 secrets/
-**/application-local.yml
-**/application-secrets.yml
+credentials*.json
+service-account*.json
+*-credentials.*
+# Configuración local de Spring con datos reales
+**/application-local.*
+**/application-secrets.*
+**/application-*-local.*
+# Configuración local de herramientas de IA (puede tener rutas y permisos personales)
+.claude/settings.local.json
+# Capturas de tráfico del navegador: contienen cookies de sesión y tokens
+*.har
+# Notas personales que no son del proyecto (rutas de la PC, pendientes privados)
+docs/privado/
 
 # ===== Java / Maven / Gradle =====
 target/
@@ -45,8 +68,13 @@ desktop.ini
 infra/data/
 # Archivos multimedia de desarrollo (ADR-0004)
 backend/data/
+# Dumps de base: contienen datos personales y de salud de alumnos (nunca al repo).
+# OJO: NO ignorar *.sql en general, porque las migraciones de Flyway son .sql y SÍ se versionan.
 *.sql.gz
+*.sql.zip
+*.dump
+dumps/
 backups/
 
 # ===== Maven Wrapper (el .jar se descarga solo; el script mvnw sí se versiona) =====
-.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar

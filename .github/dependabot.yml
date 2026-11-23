@@ -1,0 +1,77 @@
+# Dependabot: abre PRs automáticos cuando sale una versión nueva de una dependencia y,
+# más importante, cuando una versión que usamos tiene una vulnerabilidad conocida (CVE).
+# Cada PR pasa por la CI, así que una actualización que rompe algo se ve en rojo antes de mergear.
+#
+# Agrupamos minor + patch en un solo PR por ecosistema para no recibir 20 PRs por semana.
+# Las versiones MAYORES (ej. Spring Boot 5, Angular 23) llegan en PRs separados: requieren
+# leer la guía de migración y actualizar ADR-0001 antes de aceptarlas.
+version: 2
+
+updates:
+  # Backend: pom.xml (Spring Boot parent, Spring Modulith, plugins).
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: scope
+    groups:
+      backend-menores:
+        update-types: [minor, patch]
+
+  # Frontend: package.json. Los paquetes de Angular van juntos porque deben tener la misma versión.
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: scope
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*"]
+      frontend-menores:
+        update-types: [minor, patch]
+
+  # Las propias acciones de GitHub usadas en .github/workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    commit-message:
+      prefix: "chore"
+      include: scope
+    groups:
+      acciones:
+        patterns: ["*"]
+
+  # Imágenes de infra/docker-compose.yml (MySQL, Mailpit).
+  # OJO: la misma versión está en backend/pom.xml (mysql.image / mailpit.image). Si Dependabot
+  # actualiza solo el compose, VersionesStackTest falla A PROPÓSITO: hay que subir también el pom
+  # en ese mismo PR. Así desarrollo y tests nunca corren contra versiones distintas.
+  - package-ecosystem: docker-compose
+    directory: /infra
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Argentina/Buenos_Aires
+    commit-message:
+      prefix: "chore"
+      include: scope
+    ignore:
+      # MySQL: nos quedamos en la línea LTS 8.4 (ADR-0001). Saltar a 9.x es una decisión, no un bump.
+      - dependency-name: mysql
+        update-types: [version-update:semver-major, version-update:semver-minor]
