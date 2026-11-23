@@ -32,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # historial completo, no solo el último commit
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_COMMENTS: false   # no necesita permiso de escritura en el PR
@@ -48,11 +48,11 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # JDK 25 de Eclipse Temurin, el mismo que usa IntelliJ en tu PC (ADR-0001).
       # cache: maven guarda ~/.m2 entre corridas: no se bajan todas las dependencias cada vez.
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
@@ -68,7 +68,7 @@ jobs:
       # Si falla, subimos los reportes para poder ver QUÉ test falló y por qué.
       - name: Reportes de tests (si falla)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reportes-backend
           path: |
@@ -84,10 +84,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # La versión de Node sale de frontend/.nvmrc: una sola fuente de verdad para tu PC y la CI.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: frontend/.nvmrc
           cache: npm
