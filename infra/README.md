@@ -18,6 +18,18 @@ docker compose -f infra/docker-compose.yml --env-file .env up -d
 docker compose -f infra/docker-compose.yml ps    # debe decir "healthy"
 ```
 
+### Usuarios de la plataforma (paso 0.3, ADR-0002)
+
+`infra/mysql/init/01-plataforma.sh` crea la base `gym_platform` y dos usuarios:
+`gp_app` (la app: solo datos) y `gp_aprovisionador` (migraciones y alta de gimnasios).
+MySQL lo corre solo la **primera vez** (volumen vacío). Si tu base ya existía de antes, corrélo
+una vez a mano (es idempotente: se puede repetir sin problema):
+
+```powershell
+docker compose -f infra/docker-compose.yml --env-file .env up -d
+docker compose -f infra/docker-compose.yml --env-file .env exec mysql bash /docker-entrypoint-initdb.d/01-plataforma.sh
+```
+
 Conexión desde DBeaver u otro cliente: host `127.0.0.1`, puerto `3307`.
 **Ojo:** si te conectás a `localhost:3306`, vas a estar en tu MySQL del trabajo, no en el del proyecto.
 

@@ -4,6 +4,33 @@
 spring:
   application:
     name: gimnasio
+
+  # --- Catálogo de la plataforma (gym_platform) ---------------------------------------
+  # La app lo lee con gp_app: solo datos, sin permisos para crear o borrar tablas (ADR-0002 §3).
+  # Las bases de cada gimnasio NO se configuran acá: se resuelven en runtime desde el catálogo (paso 0.4).
+  datasource:
+    # sslMode=PREFERRED: usa TLS si el servidor lo ofrece (MySQL 8.4 lo trae activado).
+    # En producción: GYM_DB_PARAMS=sslMode=VERIFY_IDENTITY (TLS obligatorio con certificado verificado).
+    url: jdbc:mysql://${GYM_DB_HOST:127.0.0.1}:${GYM_DB_PORT:3307}/gym_platform?${GYM_DB_PARAMS:sslMode=PREFERRED&allowPublicKeyRetrieval=true}
+    username: gp_app
+    password: ${GP_APP_DB_PASSWORD}
+    hikari:
+      pool-name: catalogo
+      maximum-pool-size: 5          # ADR-0002 §4
+      connection-timeout: 5000      # ms: si la base no responde, fallar rápido y no colgar requests
+
+  # --- Migraciones del catálogo -------------------------------------------------------
+  # Flyway usa OTRO usuario (gp_aprovisionador), con permisos de estructura. Al definir
+  # spring.flyway.user, Spring Boot le arma a Flyway su propia conexión, separada del pool de la app.
+  # Desarrollo: migra al arrancar. Producción: GYM_MIGRAR_AL_INICIAR=false y las migraciones
+  # corren como un paso aparte del deploy, para que la app web nunca tenga esta credencial.
+  flyway:
+    enabled: ${GYM_MIGRAR_AL_INICIAR:true}
+    user: gp_aprovisionador
+    password: ${GP_APROVISIONADOR_DB_PASSWORD:}
+    locations: classpath:db/plataforma
+    # Si alguien editó una migración ya aplicada, Flyway detecta el checksum distinto y NO arranca.
+    validate-on-migrate: true
   mail:
     # En desarrollo: Mailpit (infra/docker-compose.yml). En producción: el SMTP real, por variables de entorno.
     host: ${MAIL_HOST:localhost}

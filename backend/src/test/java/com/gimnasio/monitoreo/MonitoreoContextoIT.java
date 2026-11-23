@@ -7,9 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
-/** Con la configuración por defecto de application.yml, el monitor de disco queda activo. */
-@SpringBootTest(properties = "gym.monitoreo.disco.demora-inicial=PT1H")
-class MonitoreoContextoTest {
+import com.gimnasio.soporte.MysqlPlataformaContenedor;
+
+/**
+ * Con la configuración por defecto de application.yml, el monitor de disco queda activo.
+ * Es de integración (IT) porque arrancar Spring ahora necesita la base del catálogo.
+ */
+@SpringBootTest
+class MonitoreoContextoIT extends MysqlPlataformaContenedor {
 
     @Autowired
     ApplicationContext contexto;

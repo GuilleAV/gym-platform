@@ -78,6 +78,32 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!--
+            Acceso a datos con JDBC (DataSource + pool HikariCP + JdbcTemplate + transacciones).
+            Se elige JDBC y no JPA para el catálogo: son pocas tablas, consultas simples y
+            queremos ver el SQL. JPA se evalúa para los módulos de negocio más adelante.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <!-- Flyway: versiona el esquema de la base con scripts V1, V2... (nunca se editan los aplicados). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <!-- Soporte específico de MySQL para Flyway (desde Flyway 10 viene en un módulo aparte). -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+        <!-- Driver JDBC de MySQL. "runtime": el código no lo importa directamente, solo lo usa JDBC. -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- ===================== Tests ===================== -->
         <!-- JUnit Jupiter, AssertJ, Mockito y soporte de tests de Spring. -->
         <dependency>
@@ -104,13 +130,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-mysql</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- Driver JDBC de MySQL. Por ahora solo en tests; pasa a "runtime" cuando
-             la app se conecte a la base (paso de enrutamiento multi-tenant). -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
