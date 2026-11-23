@@ -28,5 +28,18 @@ Ningún cambio sin tests: unitarios de dominio, integración con Testcontainers 
 - Dinero en `DECIMAL(12,2)` / `BigDecimal`. Fechas en UTC; zona por gimnasio.
 - Ser honesto: si algo no se compiló o testeó, decirlo y dar el comando (`./mvnw verify`, `npm test`).
 
+## Preferencias del usuario (pedidos explícitos)
+- **"Arrancá docker"** → lo hace Claude, no le pasa los pasos al usuario:
+  1. Si no existe `C:\Gimnasio\.env`, crearlo desde `.env.example` con una `MYSQL_ROOT_PASSWORD` aleatoria
+     (generada sin mostrarla en el chat) y avisarle que la clave está en `.env`.
+  2. Abrir **Docker Desktop** con computer use y esperar a que diga "Engine running".
+  3. Verificar en la pestaña *Containers* que `gimnasio` (mysql y mailpit) esté **healthy**. Con
+     `restart: unless-stopped`, los contenedores arrancan solos al abrir Docker Desktop.
+  4. Si los contenedores no existen todavía (primera vez o después de un `down`), Claude no puede tipear en
+     terminales: pedirle al usuario que corra **una sola vez** desde `C:\Gimnasio`:
+     `docker compose -f infra/docker-compose.yml --env-file .env up -d`.
+  5. Informar el resultado: MySQL en `127.0.0.1:3307` y Mailpit en http://localhost:8025.
+- El **puerto 3306**, **Node 20** y los **JDK del trabajo** del usuario no se tocan nunca.
+
 ## Memoria (MCP Engram)
 Guardar en Engram las decisiones, bugs resueltos y convenciones nuevas al cerrar cada sesión de trabajo; consultarlo al empezar.

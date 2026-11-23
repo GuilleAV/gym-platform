@@ -1,0 +1,30 @@
+# Configuración base, común a todos los entornos.
+# NUNCA poner secretos acá: este archivo se versiona en Git.
+# Los secretos llegan por variables de entorno (ver docs/adr, ADR-0002 próximamente).
+spring:
+  application:
+    name: gimnasio
+  mail:
+    # En desarrollo: Mailpit (infra/docker-compose.yml). En producción: el SMTP real, por variables de entorno.
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    default-encoding: UTF-8      # acentos y ñ correctos en asunto y cuerpo
+    properties:
+      # Timeouts en milisegundos: si el servidor de correo no responde, no bloquear la aplicación.
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+gym:
+  monitoreo:
+    disco:
+      habilitado: ${GYM_MONITOREO_DISCO_HABILITADO:true}
+      # Carpetas a vigilar, separadas por coma. En producción: el volumen de archivos (ADR-0004)
+      # y, si MySQL está en otro disco, también su carpeta de datos.
+      rutas: ${GYM_MEDIA_PATH:./data/media}
+      umbral-porcentaje: 85        # avisar al llegar al 85 % de uso
+      histeresis-puntos: 5         # "normalizado" recién por debajo del 80 %
+      recordatorio: PT24H          # mientras siga arriba, recordar una vez por día
+      intervalo: PT15M             # revisar cada 15 minutos
+      demora-inicial: PT1M         # primera revisión, 1 minuto después de arrancar
+      email-destino: ${GYM_ALERTAS_EMAIL:}   # vacío = solo queda en el log

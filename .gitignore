@@ -43,5 +43,10 @@ desktop.ini
 
 # ===== Datos locales =====
 infra/data/
+# Archivos multimedia de desarrollo (ADR-0004)
+backend/data/
 *.sql.gz
 backups/
+
+# ===== Maven Wrapper (el .jar se descarga solo; el script mvnw sí se versiona) =====
+.mvn/wrapper/maven-wrapper.jar
