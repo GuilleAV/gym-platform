@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — pasos 0.2 a 0.5 con CI en verde (PRs #1 a #4, sin mergear); siguen 0.6 y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.5 mergeados en `main`; 0.6 en PR #8 (CI ✅); sigue 0.6b (MFA, límite de intentos, invitaciones) y 0.7
 
 ---
 
@@ -32,7 +32,17 @@
   - Bug aprendido: en `GRANT`, `_` en el nombre de la base es comodín → se escapa (`gym\_033`).
   - Pendiente técnico: Spring 7 no traduce el error 3819 (CHECK) a `DataIntegrityViolationException`; resolverlo
     cuando haya capa de API con validaciones (0.6+). Migrar automáticamente las bases existentes al arrancar.
-- [~] **Paso 0.2 — PR #1 (CI ✅), sin mergear** (rama `feature/paso-0-2`, sin mergear):
+- [x] **Paso 0.6 — PR #8 (CI ✅):** módulo `identidad`. Usuarios en la base de cada gimnasio (V2), Argon2id
+  (OWASP: 19 MiB, t=2, p=1), Spring Session JDBC en la base del gimnasio actual, cookie `__Host-SESION`
+  configurada en código (Boot 4 no aplicaba `server.servlet.session.cookie.*` a Spring Session: lo detectó
+  SesionIT), CSRF SPA con `__Host-XSRF-TOKEN`, endpoints `/api/sesion/*`. Pantalla Angular mínima de login
+  (proxy sin cambiar Host + `allowedHosts: .localhost`). 121 tests backend + 6 frontend.
+  - Desvío menor del ADR-0002: la tabla de atributos se llama `sesion_ATTRIBUTES` (la impone Spring Session).
+  - Pendiente 0.6b: MFA de admins (ADR-0003), límite de intentos, invitación por correo, vencimiento absoluto de 12 h.
+- [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
+- [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
+  actualizar ADR-0001), #7 TypeScript 7 (CI ❌: Angular 22 no lo soporta → cerrar e ignorar mayores de TS).
+- [x] **Paso 0.2 — mergeado** (rama `feature/paso-0-2`, sin mergear):
   - Spring Modulith **2.1.1** (BOM en el pom) + `ModularidadTest`: `verify()` (límites y ciclos), guardia
     anti-"verificación en vacío" y diagramas PlantUML en `target/spring-modulith-docs`.
   - `.github/workflows/ci.yml`: backend (`./mvnw verify` con Testcontainers) y frontend (`npm ci`, tests, build)
