@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
         <relativePath/>
     </parent>
 
@@ -44,7 +44,7 @@
             La línea 2.1.x es la que se compila contra Spring Boot 4.1 (ver ADR-0001).
             Al subir Spring Boot de versión menor (4.2, ...), revisar la tabla de compatibilidad.
         -->
-        <spring-modulith.version>2.1.1</spring-modulith.version>
+        <spring-modulith.version>2.2.0</spring-modulith.version>
     </properties>
 
     <!--
