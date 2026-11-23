@@ -38,5 +38,28 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    # Servidor de correo FALSO para desarrollo: atrapa todos los mails que manda la app
+    # (invitaciones, avisos de vencimiento) y los muestra en http://localhost:8025.
+    # Ningún mail de prueba llega a una persona real.
+    image: axllent/mailpit:v1.34.0
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db      # los mails sobreviven a un reinicio del contenedor
+      MP_MAX_MESSAGES: 5000              # guarda los últimos 5000 y borra los más viejos
+      MP_SMTP_AUTH_ACCEPT_ANY: 1         # acepta cualquier usuario/clave SMTP (solo desarrollo)
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1     # permite SMTP sin TLS (solo desarrollo, solo localhost)
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"   # la app manda los mails acá (SMTP)
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"     # bandeja web para leerlos
+    volumes:
+      - mailpit-data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mysql-data:
+  mailpit-data:

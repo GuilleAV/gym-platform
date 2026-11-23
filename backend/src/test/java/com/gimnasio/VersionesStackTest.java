@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +52,46 @@ class VersionesStackTest {
     }
 
     @Test
+    void dockerComposeUsaLaMismaImagenDeMailpitQueLosTests() throws IOException {
+        String imagenMailpit = System.getProperty("mailpit.image");
+
+        assertThat(imagenMailpit).as("la propiedad mailpit.image debe venir del pom.xml").isNotBlank();
+        assertThat(Files.readString(DOCKER_COMPOSE))
+                .as("infra/docker-compose.yml debe usar la misma imagen de Mailpit que backend/pom.xml")
+                .contains("image: " + imagenMailpit);
+    }
+
+    @Test
+    void todasLasImagenesDelComposeTienenVersionExacta() throws IOException {
+        List<String> imagenes = Files.readAllLines(DOCKER_COMPOSE).stream()
+                .map(VersionesStackTest::sinComentario)
+                .filter(linea -> linea.startsWith("image:"))
+                .map(linea -> linea.substring("image:".length()).strip())
+                .toList();
+
+        assertThat(imagenes).as("el compose debe declarar al menos una imagen").isNotEmpty();
+        // Cada imagen debe terminar en una versión con tres números (ej. 8.4.13 o v1.34.0).
+        // Prohibido ":latest", ":edge" o versiones parciales como ":8.4": no son reproducibles.
+        assertThat(imagenes)
+                .as("imágenes con versión exacta (ADR-0001)")
+                .allMatch(imagen -> imagen.matches(".+:v?\\d+\\.\\d+\\.\\d+"));
+    }
+
+    @Test
+    void todosLosPuertosPublicadosSonSoloDeLocalhost() throws IOException {
+        List<String> puertos = Files.readAllLines(DOCKER_COMPOSE).stream()
+                .map(VersionesStackTest::sinComentario)
+                .filter(linea -> linea.matches("- \"[^\"]*:\\d+\""))
+                .toList();
+
+        assertThat(puertos).as("el compose debe publicar al menos un puerto").isNotEmpty();
+        // Seguridad: sin "127.0.0.1:" el servicio quedaría accesible desde toda la red.
+        assertThat(puertos)
+                .as("puertos publicados solo en 127.0.0.1")
+                .allMatch(puerto -> puerto.startsWith("- \"127.0.0.1:"));
+    }
+
+    @Test
     void mysqlDeDesarrolloSoloEscuchaEnLocalhostYNoUsaEl3306() throws IOException {
         String compose = Files.readString(DOCKER_COMPOSE);
 
@@ -64,5 +105,10 @@ class VersionesStackTest {
                 .as("no publicar el 3306 de la PC")
                 .doesNotContain("\"3306:3306\"")
                 .doesNotContain("127.0.0.1:3306:");
+    }
+
+    /** Quita espacios y el comentario YAML del final de la línea ("valor   # comentario" -> "valor"). */
+    private static String sinComentario(String linea) {
+        return linea.replaceFirst("\\s+#.*$", "").strip();
     }
 }

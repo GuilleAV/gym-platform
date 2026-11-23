@@ -43,6 +43,8 @@ desktop.ini
 
 # ===== Datos locales =====
 infra/data/
+# Archivos multimedia de desarrollo (ADR-0004)
+backend/data/
 *.sql.gz
 backups/
 
