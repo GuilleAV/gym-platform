@@ -45,6 +45,9 @@
             Al subir Spring Boot de versión menor (4.2, ...), revisar la tabla de compatibilidad.
         -->
         <spring-modulith.version>2.1.1</spring-modulith.version>
+        <!-- BouncyCastle: Argon2 de Spring Security lo necesita. NO está en el BOM de Boot.
+             1.85+ corrige CVEs de 2026; Dependabot avisa las nuevas. -->
+        <bouncycastle.version>1.85.2</bouncycastle.version>
     </properties>
 
     <!--
@@ -82,6 +85,22 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <!-- Spring Security: autenticación, autorización, CSRF, cabeceras de seguridad. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Spring Session JDBC: la sesión HTTP se guarda en la base del gimnasio (ADR-0002 §1). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-session-jdbc</artifactId>
+        </dependency>
+        <!-- Implementación de Argon2id que usa Argon2PasswordEncoder. -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
         <!--
             Acceso a datos con JDBC (DataSource + pool HikariCP + JdbcTemplate + transacciones).

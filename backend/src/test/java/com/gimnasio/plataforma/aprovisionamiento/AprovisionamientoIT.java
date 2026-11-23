@@ -93,7 +93,7 @@ class AprovisionamientoIT extends MysqlPlataformaContenedor {
                 .isEqualTo("ACTIVO");
         DatosConexion conexion = conexiones.buscar(norte.gimnasioId()).orElseThrow();
         assertThat(conexion.estado()).isEqualTo("LISTA");
-        assertThat(norte.versionEsquema()).isEqualTo("1");
+        assertThat(norte.versionEsquema()).as("última migración de db/gimnasio").isEqualTo("2");
     }
 
     @Test

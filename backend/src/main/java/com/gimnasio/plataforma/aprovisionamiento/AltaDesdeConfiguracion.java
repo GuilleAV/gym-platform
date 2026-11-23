@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
  * están en configuración, no en el código: el código no sabe nada de "gym_001" ni de "gym_002".</p>
  */
 @Component
+@Order(10) // antes que otros arranques que necesitan los gimnasios ya creados
 class AltaDesdeConfiguracion implements ApplicationRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(AltaDesdeConfiguracion.class);

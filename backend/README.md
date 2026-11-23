@@ -34,6 +34,9 @@ En Windows (PowerShell) es `.\mvnw.cmd verify`.
 | `CifradorSecretosTest` | Unitario | AES-256-GCM: recupera el secreto, IV distinto cada vez, detecta alteraciones, otra clave o versión no descifra |
 | `ResolutorSecretosTest` | Unitario | Referencias `env:`/`file:`/`cifrado:`/`vault:`; errores sin mostrar el secreto |
 | `AprovisionamientoIT` | Integración | Alta crea base + usuario por gimnasio, clave cifrada y distinta, idempotente, no deja robar dominios; **el usuario de un gimnasio no puede leer la base de otro ni cambiar estructura**; por HTTP cada dominio lee de su base |
+| `ContraseniasTest` | Unitario | Argon2id con parámetros OWASP (19 MiB, t=2, p=1), sal aleatoria, largo 12–128 |
+| `FiltroGimnasioDeLaSesionTest` | Unitario | Una sesión iniciada en un gimnasio se invalida si llega en un request de otro |
+| `SesionIT` | Integración | Ingresar/consultar/salir; cookie `__Host-SESION` Secure+HttpOnly+SameSite sin Domain; sesión guardada en la base de su gimnasio; mismas respuestas para clave mala, correo inexistente o cuenta suspendida; CSRF obligatorio; **la cookie y los usuarios de un gimnasio no sirven en otro**; la base rechaza hashes que no sean Argon2id; limpieza de sesiones vencidas por gimnasio |
 | `MysqlVersionIT` | Integración | Un MySQL real levantado con Testcontainers responde versión 8.4 |
 
 ## Ejecutar la aplicación en IntelliJ (perfil demo)

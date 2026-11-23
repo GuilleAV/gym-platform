@@ -20,3 +20,14 @@ gym:
       - slug: power-fit
         nombre: Power Fit
         dominios: [power-fit.localhost]
+
+  # Usuario administrador de ejemplo en cada gimnasio. La clave sale de GYM_DEMO_CLAVE (tu .env).
+  demo:
+    clave: ${GYM_DEMO_CLAVE:}
+    usuarios:
+      - gimnasio: gym-norte
+        email: admin@gym-norte.localhost
+        nombre: Admin Gym Norte
+      - gimnasio: power-fit
+        email: admin@power-fit.localhost
+        nombre: Admin Power Fit

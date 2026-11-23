@@ -47,6 +47,9 @@ class ModularidadTest {
         assertThat(MODULOS.getModuleByName("plataforma"))
                 .as("plataforma debe detectarse como módulo de aplicación")
                 .isPresent();
+        assertThat(MODULOS.getModuleByName("identidad"))
+                .as("identidad debe detectarse como módulo de aplicación")
+                .isPresent();
     }
 
     /**
