@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,7 +113,7 @@ class CatalogoPlataformaIT extends MysqlPlataformaContenedor {
             assertThatThrownBy(() -> jdbc.update(
                             "INSERT INTO gimnasio_dominio (gimnasio_id, host) VALUES (?, ?)", id, hostInvalido))
                     .as("host inválido: %s", hostInvalido)
-                    .isInstanceOf(DataIntegrityViolationException.class);
+                    .satisfies(CatalogoPlataformaIT::esViolacionDeCheck);
         }
     }
 
@@ -126,15 +125,27 @@ class CatalogoPlataformaIT extends MysqlPlataformaContenedor {
 
         assertThatThrownBy(() -> jdbc.update(sql, id, "gym_001; DROP TABLE x", "gym_001_app", "cifrado:1"))
                 .as("nombre de base con formato libre")
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .satisfies(CatalogoPlataformaIT::esViolacionDeCheck);
         assertThatThrownBy(() -> jdbc.update(sql, id, "gym_001", "root", "cifrado:1"))
                 .as("usuario que no es el del gimnasio")
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .satisfies(CatalogoPlataformaIT::esViolacionDeCheck);
         assertThatThrownBy(() -> jdbc.update(sql, id, "gym_001", "gym_001_app", "clave-en-texto-plano"))
                 .as("una clave en vez de una referencia")
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .satisfies(CatalogoPlataformaIT::esViolacionDeCheck);
 
         assertThat(jdbc.update(sql, id, "gym_001", "gym_001_app", "cifrado:1")).isEqualTo(1);
+    }
+
+    /**
+     * MySQL informa una restricción CHECK violada con el error 3819. Spring 7 no lo clasifica como
+     * DataIntegrityViolationException (lo deja como UncategorizedSQLException), así que verificamos
+     * la causa raíz: que el rechazo venga de la base y por una regla CHECK, no por otro error.
+     */
+    private static void esViolacionDeCheck(Throwable error) {
+        assertThat(error).isInstanceOf(DataAccessException.class);
+        assertThat(error).rootCause()
+                .isInstanceOf(java.sql.SQLException.class)
+                .hasMessageContaining("Check constraint");
     }
 
     private long insertarGimnasio(String slug) {
