@@ -36,19 +36,16 @@ En Windows (PowerShell) es `.\mvnw.cmd verify`.
 | `AprovisionamientoIT` | Integración | Alta crea base + usuario por gimnasio, clave cifrada y distinta, idempotente, no deja robar dominios; **el usuario de un gimnasio no puede leer la base de otro ni cambiar estructura**; por HTTP cada dominio lee de su base |
 | `MysqlVersionIT` | Integración | Un MySQL real levantado con Testcontainers responde versión 8.4 |
 
-## Ejecutar la aplicación en IntelliJ
+## Ejecutar la aplicación en IntelliJ (perfil demo)
 
-La app necesita las claves de los usuarios MySQL (están en `C:\Gimnasio\.env`, nunca en el repo).
-En *Run → Edit Configurations → GimnasioApplication → Modify options → Environment variables*,
-cargá el archivo `.env` de la raíz (o definí `GP_APP_DB_PASSWORD` y `GP_APROVISIONADOR_DB_PASSWORD`).
-Al arrancar, Flyway crea o actualiza las tablas de `gym_platform` con el usuario `gp_aprovisionador`.
-
-Con el perfil **`demo`** (*Active profiles: demo*), al arrancar se dan de alta dos gimnasios de ejemplo
-(`application-demo.yml`). Probalo en el navegador:
-
-- http://gym-norte.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Gym Norte
-- http://power-fit.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Power Fit
-- http://localhost:8080/api/gimnasio → 404 (dominio no registrado)
+1. Docker con MySQL corriendo (ver `infra/README.md`) y el script `01-plataforma.sh` aplicado.
+2. *Run → Edit Configurations → GimnasioApplication* → **Program arguments**: `--spring.profiles.active=demo`.
+   Con ese perfil la app lee las claves de `C:\Gimnasio\.env` (nunca están en el repo) y, al arrancar,
+   da de alta los gimnasios de `application-demo.yml` (idempotente: reiniciar no duplica nada).
+3. Probar en el navegador:
+   - http://gym-norte.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Gym Norte
+   - http://power-fit.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Power Fit
+   - http://localhost:8080/api/gimnasio → 404 (dominio no registrado)
 
 ## Integración continua
 
