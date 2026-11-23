@@ -49,7 +49,9 @@
 > Cubre las decisiones 1 a 4. Cambio respecto de la revisión: los secretos generados por el alta
 > automática van **cifrados en `gym_platform`** (AES-256-GCM, clave maestra fuera de la base), porque
 > con solo variables de entorno el alta automática no puede funcionar sin reiniciar la app.
-> Falta: redactar ADR-0003 (decisión 5). Al redactarlo, incluir la recuperación de acceso de admins (MFA perdido, único admin).
+> **ADR-0003 redactado (Propuesto)** → `docs/adr/0003-superadministrador-y-sesion-de-soporte.md` (decisión 5,
+> sesión de soporte con aprobación del gimnasio, modo emergencia, recuperación del único admin).
+> Falta: que el usuario apruebe ADR-0003. Con eso arranca el paso 0.3.
 
 | # | Decisión | Propuesta | ADR |
 |---|---|---|---|

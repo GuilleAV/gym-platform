@@ -8,5 +8,5 @@ Formato: `NNNN-titulo-corto.md` (copiar `0000-plantilla.md`). Un ADR aceptado no
 |---|---|---|
 | 0001 | Stack y versiones | Propuesto |
 | 0002 | Sesiones, secretos y conexiones por tenant | Aceptado |
-| 0003 | Rol del superadministrador y sesión de soporte | Pendiente de redactar |
+| 0003 | Rol del superadministrador y sesión de soporte | Propuesto |
 | 0004 | Almacenamiento y procesamiento de multimedia (disco del servidor) | Aceptado |
