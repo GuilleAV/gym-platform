@@ -1,6 +1,6 @@
 # ADR-0002: Sesiones, secretos y conexiones por tenant
 
-- **Estado:** Propuesto
+- **Estado:** Aceptado (2026-11-23)
 - **Fecha:** 2026-11-23
 - **Decisores:** GuilleAV (dueño del producto), con propuesta técnica de Claude
 
