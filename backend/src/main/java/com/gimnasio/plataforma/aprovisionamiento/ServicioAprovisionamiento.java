@@ -154,7 +154,9 @@ public class ServicioAprovisionamiento {
             // Si el usuario ya existía (alta anterior cortada), se sincroniza con la clave guardada.
             sql.execute("ALTER USER '" + usuarioBd + "'@'%' IDENTIFIED BY '" + clave + "'");
             // Solo datos (DML) y solo SU base: sin CREATE/ALTER/DROP, sin acceso a otras bases.
-            sql.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON `" + nombreBd + "`.* TO '" + usuarioBd + "'@'%'");
+            // OJO: en GRANT, "_" en el nombre de la base es un COMODÍN ("cualquier carácter"):
+            // "gym_033" significaría "gym?033". Se escapa como "gym\_033" para que sea literal.
+            sql.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON `" + escaparParaGrant(nombreBd) + "`.* TO '" + usuarioBd + "'@'%'");
         }
     }
 
@@ -180,6 +182,11 @@ public class ServicioAprovisionamiento {
     }
 
     // ------------------------------------------------------------- utilidades
+
+    /** En GRANT, "_" y "%" del nombre de base son comodines: se escapan para que sean literales. */
+    static String escaparParaGrant(String nombreBd) {
+        return nombreBd.replace("_", "\\_").replace("%", "\\%");
+    }
 
     /** 32 bytes aleatorios en Base64 URL (A-Z a-z 0-9 - _): 256 bits y sin comillas que escapar. */
     private String generarClave() {
