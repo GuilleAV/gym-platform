@@ -42,3 +42,23 @@ gym-platform/
 - Ningún secreto en el repositorio.
 - No se mergea código sin tests; la suite de aislamiento entre tenants rompe el build si falla.
 - Cuota ≠ pago ≠ factura.
+
+## Primeros pasos (Windows / PowerShell)
+
+| Herramienta | Versión | Notas |
+|---|---|---|
+| JDK | 25 LTS | IntelliJ lo descarga: *Project Structure → SDK → Download JDK → 25, Temurin* |
+| Node.js | 24 LTS (mín. 22.22) | `frontend/.nvmrc`; con nvm-windows: `nvm install 24` y `nvm use 24` |
+| Docker Desktop | reciente | Para MySQL local y para los tests con Testcontainers |
+
+```powershell
+Copy-Item .env.example .env                                   # poner una clave real
+docker compose -f infra/docker-compose.yml --env-file .env up -d
+
+# Backend: abrir backend/pom.xml en IntelliJ ("Open as Project"). Detalle en backend/README.md
+
+cd frontend
+npm ci              # instala EXACTAMENTE lo del package-lock.json
+npm run test:ci
+npm start           # http://localhost:4200
+```

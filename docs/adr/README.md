@@ -2,7 +2,7 @@
 
 Un ADR es un documento corto que registra **una** decisión de arquitectura: el contexto, qué se decidió, y sus consecuencias. Sirve para que dentro de un año sepas *por qué* el sistema es como es.
 
-Formato: `NNNN-titulo-corto.md`. Estados: Propuesto → Aceptado → (Reemplazado por ADR-XXXX).
+Formato: `NNNN-titulo-corto.md` (copiar `0000-plantilla.md`). Un ADR aceptado no se reescribe: si la decisión cambia, se crea uno nuevo que lo reemplaza. Estados: Propuesto → Aceptado → (Reemplazado por ADR-XXXX).
 
 | ADR | Título | Estado |
 |---|---|---|

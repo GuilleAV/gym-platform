@@ -1,0 +1,6 @@
+# Configuración base, común a todos los entornos.
+# NUNCA poner secretos acá: este archivo se versiona en Git.
+# Los secretos llegan por variables de entorno (ver docs/adr, ADR-0002 próximamente).
+spring:
+  application:
+    name: gimnasio
