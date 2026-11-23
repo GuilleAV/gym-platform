@@ -24,10 +24,18 @@ En Windows (PowerShell) es `.\mvnw.cmd verify`.
 
 | Test | Tipo | Qué verifica |
 |---|---|---|
-| `GimnasioApplicationTests` | Unitario | El contexto de Spring arranca |
 | `VersionesStackTest` | Unitario | Java 25, imagen MySQL exacta 8.4.x, y que `infra/docker-compose.yml` use la misma imagen |
 | `ModularidadTest` | Unitario | Spring Modulith: ningún módulo usa internos de otro, no hay ciclos; genera diagramas en `target/spring-modulith-docs` |
+| `CatalogoPlataformaIT` | Integración | Flyway crea `gym_platform`; `gp_app` no puede crear/borrar tablas, bases ni usuarios; dominios únicos y normalizados; nombres de base y referencias de secreto con formato seguro |
+| `MonitoreoContextoIT` | Integración | Spring arranca con la base del catálogo y el monitor de disco queda activo |
 | `MysqlVersionIT` | Integración | Un MySQL real levantado con Testcontainers responde versión 8.4 |
+
+## Ejecutar la aplicación en IntelliJ
+
+La app necesita las claves de los usuarios MySQL (están en `C:\Gimnasio\.env`, nunca en el repo).
+En *Run → Edit Configurations → GimnasioApplication → Modify options → Environment variables*,
+cargá el archivo `.env` de la raíz (o definí `GP_APP_DB_PASSWORD` y `GP_APROVISIONADOR_DB_PASSWORD`).
+Al arrancar, Flyway crea o actualiza las tablas de `gym_platform` con el usuario `gp_aprovisionador`.
 
 ## Integración continua
 
