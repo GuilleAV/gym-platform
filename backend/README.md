@@ -28,6 +28,9 @@ En Windows (PowerShell) es `.\mvnw.cmd verify`.
 | `ModularidadTest` | Unitario | Spring Modulith: ningún módulo usa internos de otro, no hay ciclos; genera diagramas en `target/spring-modulith-docs` |
 | `CatalogoPlataformaIT` | Integración | Flyway crea `gym_platform`; `gp_app` no puede crear/borrar tablas, bases ni usuarios; dominios únicos y normalizados; nombres de base y referencias de secreto con formato seguro |
 | `MonitoreoContextoIT` | Integración | Spring arranca con la base del catálogo y el monitor de disco queda activo |
+| `NormalizadorHostTest` | Unitario | El mismo dominio escrito distinto (mayúsculas, punto final, acentos) da una sola identidad; rechaza puertos, rutas y basura |
+| `ContextoGimnasioTest` | Unitario | El gimnasio actual existe solo dentro de su bloque (`ScopedValue`), incluso si hay excepciones; sin gimnasio se deniega |
+| `ResolucionGimnasioIT` | Integración | Cada dominio responde con su gimnasio; desconocido, suspendido o dominio de baja → 404; ignora `gimnasioId` del cliente y `X-Forwarded-Host` |
 | `MysqlVersionIT` | Integración | Un MySQL real levantado con Testcontainers responde versión 8.4 |
 
 ## Ejecutar la aplicación en IntelliJ
