@@ -85,15 +85,4 @@ gym:
       demora-inicial: PT1M         # primera revisión, 1 minuto después de arrancar
       email-destino: ${GYM_ALERTAS_EMAIL:}   # vacío = solo queda en el log
 
-# --- Cookie de sesión ------------------------------------------------------------------
-# __Host- obliga al navegador a: Secure (solo HTTPS; localhost cuenta como seguro), Path=/ y SIN
-# Domain. Sin Domain, la cookie de gym-norte.ejemplo.com nunca se manda a power-fit.ejemplo.com.
-server:
-  servlet:
-    session:
-      cookie:
-        name: __Host-SESION
-        secure: true
-        http-only: true          # el JavaScript de la página no puede leerla (protege de XSS)
-        same-site: lax           # no viaja en POSTs desde otros sitios
-        path: /
+# La cookie de sesión (__Host-SESION) se configura en código: plataforma/sesiones/SesionesConfig.
