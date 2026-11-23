@@ -45,6 +45,12 @@
 
 ## Decisiones abiertas (bloquean la Fase 0, ver revisión §3)
 
+> **ADR-0002 redactado (Propuesto)** → `docs/adr/0002-sesiones-secretos-y-conexiones-por-tenant.md`.
+> Cubre las decisiones 1 a 4. Cambio respecto de la revisión: los secretos generados por el alta
+> automática van **cifrados en `gym_platform`** (AES-256-GCM, clave maestra fuera de la base), porque
+> con solo variables de entorno el alta automática no puede funcionar sin reiniciar la app.
+> Falta: que el usuario lo apruebe, y redactar ADR-0003 (decisión 5).
+
 | # | Decisión | Propuesta | ADR |
 |---|---|---|---|
 | 1 | Dónde viven las sesiones | Spring Session JDBC en la base de cada tenant | 0002 |
