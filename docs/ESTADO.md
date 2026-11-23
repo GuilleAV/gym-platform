@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — paso 0.2 en curso (rama `feature/paso-0-2`)
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — pasos 0.2 a 0.5 con CI en verde (PRs #1 a #4, sin mergear); siguen 0.6 y 0.7
 
 ---
 
@@ -19,7 +19,20 @@
   - Tests guardianes del compose: imágenes con versión exacta, puertos solo en 127.0.0.1, compose = pom.
   - Consola y correos en UTF-8 (`backend/.mvn/jvm.config`).
 
-- [~] **Paso 0.2 — EN CURSO** (rama `feature/paso-0-2`, sin mergear):
+- [x] **Flujo de trabajo con CI (23/11/2026):** Claude trabaja en una copia del repo en la nube, sube ramas y
+  lee la CI de GitHub Actions (Docker + Testcontainers) hasta dejarla en verde. El usuario hace `git pull`.
+  **Nada se mergea a `main` sin el OK del usuario.**
+- [x] **Paso 0.3 — PR #2 (CI ✅):** `gym_platform` con Flyway (`gimnasio`, `gimnasio_dominio`, `gimnasio_conexion`,
+  `secreto`), script `infra/mysql/init/01-plataforma.sh` (usuarios `gp_app` solo DML y `gp_aprovisionador`).
+- [x] **Paso 0.4 — PR #3 (CI ✅):** resolución del gimnasio por dominio (`FiltroResolucionGimnasio`,
+  `ContextoGimnasio` con `ScopedValue`), 404 genérico si el dominio no existe, `GET /api/gimnasio`.
+- [x] **Paso 0.5 — PR #4 (CI ✅):** alta automática idempotente (`ServicioAprovisionamiento`): base `gym_NNN`,
+  usuario `gym_NNN_app` (solo DML sobre su base), clave cifrada AES-256-GCM (`GYM_CLAVE_MAESTRA`), pools HikariCP
+  por gimnasio con cierre por inactividad (Caffeine), `BaseDelGimnasio`, perfil `demo`. 98 tests.
+  - Bug aprendido: en `GRANT`, `_` en el nombre de la base es comodín → se escapa (`gym\_033`).
+  - Pendiente técnico: Spring 7 no traduce el error 3819 (CHECK) a `DataIntegrityViolationException`; resolverlo
+    cuando haya capa de API con validaciones (0.6+). Migrar automáticamente las bases existentes al arrancar.
+- [~] **Paso 0.2 — PR #1 (CI ✅), sin mergear** (rama `feature/paso-0-2`, sin mergear):
   - Spring Modulith **2.1.1** (BOM en el pom) + `ModularidadTest`: `verify()` (límites y ciclos), guardia
     anti-"verificación en vacío" y diagramas PlantUML en `target/spring-modulith-docs`.
   - `.github/workflows/ci.yml`: backend (`./mvnw verify` con Testcontainers) y frontend (`npm ci`, tests, build)

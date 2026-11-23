@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * Si no normalizamos, el mismo gimnasio tendría varias "identidades" y un atacante podría jugar con
  * esas variantes. Todo lo que no sea un nombre de host válido se rechaza (Optional vacío).</p>
  */
-final class NormalizadorHost {
+public final class NormalizadorHost {
 
     /** Mismo formato que el CHECK ck_dominio_host de la base (V1). */
     private static final Pattern HOST_VALIDO = Pattern.compile("^[a-z0-9-]+(\\.[a-z0-9-]+)*$");
@@ -22,7 +22,7 @@ final class NormalizadorHost {
     private NormalizadorHost() {
     }
 
-    static Optional<String> normalizar(String host) {
+    public static Optional<String> normalizar(String host) {
         if (host == null || host.isBlank()) {
             return Optional.empty();
         }

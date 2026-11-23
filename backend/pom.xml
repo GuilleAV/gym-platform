@@ -109,6 +109,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Caffeine: caché en memoria con expiración. La usamos para cerrar los pools de conexiones
+             de los gimnasios que no se usan hace 30 minutos (ADR-0002 §4). Versión: BOM de Boot. -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- ===================== Tests ===================== -->
         <!-- JUnit Jupiter, AssertJ, Mockito y soporte de tests de Spring. -->
         <dependency>

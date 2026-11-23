@@ -31,14 +31,21 @@ En Windows (PowerShell) es `.\mvnw.cmd verify`.
 | `NormalizadorHostTest` | Unitario | El mismo dominio escrito distinto (mayúsculas, punto final, acentos) da una sola identidad; rechaza puertos, rutas y basura |
 | `ContextoGimnasioTest` | Unitario | El gimnasio actual existe solo dentro de su bloque (`ScopedValue`), incluso si hay excepciones; sin gimnasio se deniega |
 | `ResolucionGimnasioIT` | Integración | Cada dominio responde con su gimnasio; desconocido, suspendido o dominio de baja → 404; ignora `gimnasioId` del cliente y `X-Forwarded-Host` |
+| `CifradorSecretosTest` | Unitario | AES-256-GCM: recupera el secreto, IV distinto cada vez, detecta alteraciones, otra clave o versión no descifra |
+| `ResolutorSecretosTest` | Unitario | Referencias `env:`/`file:`/`cifrado:`/`vault:`; errores sin mostrar el secreto |
+| `AprovisionamientoIT` | Integración | Alta crea base + usuario por gimnasio, clave cifrada y distinta, idempotente, no deja robar dominios; **el usuario de un gimnasio no puede leer la base de otro ni cambiar estructura**; por HTTP cada dominio lee de su base |
 | `MysqlVersionIT` | Integración | Un MySQL real levantado con Testcontainers responde versión 8.4 |
 
-## Ejecutar la aplicación en IntelliJ
+## Ejecutar la aplicación en IntelliJ (perfil demo)
 
-La app necesita las claves de los usuarios MySQL (están en `C:\Gimnasio\.env`, nunca en el repo).
-En *Run → Edit Configurations → GimnasioApplication → Modify options → Environment variables*,
-cargá el archivo `.env` de la raíz (o definí `GP_APP_DB_PASSWORD` y `GP_APROVISIONADOR_DB_PASSWORD`).
-Al arrancar, Flyway crea o actualiza las tablas de `gym_platform` con el usuario `gp_aprovisionador`.
+1. Docker con MySQL corriendo (ver `infra/README.md`) y el script `01-plataforma.sh` aplicado.
+2. *Run → Edit Configurations → GimnasioApplication* → **Program arguments**: `--spring.profiles.active=demo`.
+   Con ese perfil la app lee las claves de `C:\Gimnasio\.env` (nunca están en el repo) y, al arrancar,
+   da de alta los gimnasios de `application-demo.yml` (idempotente: reiniciar no duplica nada).
+3. Probar en el navegador:
+   - http://gym-norte.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Gym Norte
+   - http://power-fit.localhost:8080/api/gimnasio/bienvenida → responde desde la base de Power Fit
+   - http://localhost:8080/api/gimnasio → 404 (dominio no registrado)
 
 ## Integración continua
 

@@ -46,7 +46,9 @@ CREATE DATABASE IF NOT EXISTS gym_platform
 -- -----------------------------------------------------------------------------
 CREATE USER IF NOT EXISTS 'gp_app'@'%' IDENTIFIED BY '${CLAVE_APP}';
 ALTER USER 'gp_app'@'%' IDENTIFIED BY '${CLAVE_APP}';
-GRANT SELECT, INSERT, UPDATE, DELETE ON gym_platform.* TO 'gp_app'@'%';
+-- gym\\_platform: el "_" va escapado porque en GRANT es un comodín ("cualquier
+-- carácter"). Sin escapar, el permiso valdría para cualquier base "gym?platform".
+GRANT SELECT, INSERT, UPDATE, DELETE ON \`gym\_platform\`.* TO 'gp_app'@'%';
 
 -- -----------------------------------------------------------------------------
 -- gp_aprovisionador: SOLO para migraciones (Flyway) y el alta de gimnasios.

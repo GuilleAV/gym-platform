@@ -1,6 +1,8 @@
 package com.gimnasio.soporte;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Base64;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -25,6 +27,10 @@ public abstract class MysqlPlataformaContenedor {
     /** Claves solo de test: el contenedor vive minutos y es inaccesible desde fuera de la PC/runner. */
     protected static final String CLAVE_APP = "clave-app-de-test";
     protected static final String CLAVE_APROVISIONADOR = "clave-aprovisionador-de-test";
+
+    /** Clave maestra solo para tests (32 bytes). La real está en .env y nunca en el repo. */
+    protected static final String CLAVE_MAESTRA_TEST = Base64.getEncoder()
+            .encodeToString("clave-maestra-solo-para-tests!!!".getBytes(StandardCharsets.US_ASCII));
 
     private static final Path SCRIPT_INIT = Path.of("..", "infra", "mysql", "init", "01-plataforma.sh");
 
@@ -52,9 +58,21 @@ public abstract class MysqlPlataformaContenedor {
      */
     @DynamicPropertySource
     static void propiedadesDeBase(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", MysqlPlataformaContenedor::urlCatalogo);
+        // El servidor MySQL (catálogo y bases de gimnasios) es el del contenedor.
+        registro.add("gym.bd.host", MYSQL::getHost);
+        registro.add("gym.bd.puerto", () -> MYSQL.getMappedPort(3306));
         registro.add("spring.datasource.password", () -> CLAVE_APP);
         registro.add("spring.flyway.password", () -> CLAVE_APROVISIONADOR);
+        registro.add("gym.aprovisionamiento.password", () -> CLAVE_APROVISIONADOR);
+        registro.add("gym.secretos.clave-maestra", () -> CLAVE_MAESTRA_TEST);
         registro.add("gym.monitoreo.disco.demora-inicial", () -> "PT1H");
+    }
+
+    /** Conexión como root, solo para que los tests inspeccionen el servidor (nunca la usa la app). */
+    protected static java.sql.Connection conexionRoot() throws java.sql.SQLException {
+        return java.sql.DriverManager.getConnection(
+                "jdbc:mysql://" + MYSQL.getHost() + ":" + MYSQL.getMappedPort(3306)
+                        + "/?sslMode=PREFERRED&allowPublicKeyRetrieval=true",
+                "root", MYSQL.getPassword());
     }
 }

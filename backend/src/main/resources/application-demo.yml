@@ -1,0 +1,22 @@
+# Perfil "demo" (desarrollo): al arrancar da de alta dos gimnasios de ejemplo.
+# El alta es idempotente: reiniciar la app no duplica nada.
+# Activarlo en IntelliJ: Run > Edit Configurations > Program arguments: --spring.profiles.active=demo
+#
+# Los dominios *.localhost apuntan a tu propia PC sin tocar el archivo hosts
+# (Chrome, Edge y Firefox los resuelven solos a 127.0.0.1).
+spring:
+  config:
+    # Lee las claves de C:\Gimnasio\.env (IntelliJ corre la app desde la carpeta backend/).
+    # Solo con el perfil demo: los tests nunca cargan tu .env real. "optional:" = si no existe, sigue.
+    # "[.properties]" le dice a Spring que el formato CLAVE=valor del .env es el de un .properties.
+    import: "optional:file:../.env[.properties]"
+
+gym:
+  aprovisionamiento:
+    gimnasios:
+      - slug: gym-norte
+        nombre: Gym Norte
+        dominios: [gym-norte.localhost]
+      - slug: power-fit
+        nombre: Power Fit
+        dominios: [power-fit.localhost]
