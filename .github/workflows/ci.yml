@@ -22,6 +22,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Red de seguridad: busca claves, tokens y certificados en TODO el historial de commits.
+  # El .gitignore evita subir archivos de secretos, pero no protege de pegar una clave dentro
+  # de un .java o un .yml. Si gitleaks encuentra algo, el PR queda en rojo.
+  # Importante: si alguna vez salta, NO alcanza con borrar la clave en un commit nuevo
+  # (sigue en el historial): hay que ROTARLA (generar una nueva e invalidar la vieja).
+  secretos:
+    name: Secretos (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # historial completo, no solo el último commit
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false   # no necesita permiso de escritura en el PR
+
   backend:
     name: Backend (Java 25 · unitarios + integración)
     runs-on: ubuntu-latest

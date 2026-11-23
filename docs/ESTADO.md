@@ -30,20 +30,18 @@
 
 ## Pendiente del usuario
 
+> Las notas personales y de la PC están en `docs/privado/notas-personales.md` (fuera de Git).
+
 - [ ] **Confirmar el stack:** Java 25 LTS, Spring Boot 4.1, MySQL 8.4 LTS, Angular 22. Si se aprueba, ADR-0001 pasa a **Aceptado**.
 - [ ] **Decidir el MVP:** ¿pasar el "comercial mínimo + caja de recepción" a la Fase 1? (ver revisión §2.1).
 - [ ] **Copiar los 3 `.docx` originales** a `docs/especificacion/`.
+- [ ] **MCP Engram:** instalado pero todavía no aparece en Claude (detalle en las notas privadas).
 - [ ] **Crear el repo privado `gym-platform` en GitHub** (vacío, sin README) y hacer:
   ```powershell
   cd C:\Gimnasio
   git remote add origin https://github.com/GuilleAV/gym-platform.git
   git push -u origin main
   ```
-- [ ] **MCP Engram:** instalado (`%USERPROFILE%\go\bin\engram.exe`) pero **todavía no aparece en Claude**.
-  - Claude Desktop está instalado desde la Microsoft Store (MSIX), así que su configuración está en
-    `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json`.
-  - Ya se escribió la entrada `engram` (command = ruta al exe, args = `["mcp"]`).
-  - Próxima verificación: probar en una conversación nueva después de reiniciar Claude por completo. Si no aparece, revisar el contenido del JSON y la hora de inicio del proceso Claude.
 
 ## Decisiones abiertas (bloquean la Fase 0, ver revisión §3)
 
