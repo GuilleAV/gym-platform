@@ -96,7 +96,9 @@ class SesionIT extends MysqlPlataformaContenedor {
         MvcResult resultado = intentarIngresar(NORTE, "ana@correo.com", CLAVE).andExpect(status().isNoContent()).andReturn();
 
         String setCookie = resultado.getResponse().getHeaders("Set-Cookie").stream()
-                .filter(c -> c.startsWith("__Host-SESION=")).findFirst().orElseThrow();
+                .filter(c -> c.startsWith("__Host-SESION=")).findFirst()
+                .orElseThrow(() -> new AssertionError("sin cookie de sesión; Set-Cookie: "
+                        + resultado.getResponse().getHeaders("Set-Cookie")));
         assertThat(setCookie).contains("Secure", "HttpOnly", "SameSite=Lax", "Path=/");
         assertThat(setCookie.toLowerCase()).doesNotContain("domain=");
     }
@@ -177,10 +179,14 @@ class SesionIT extends MysqlPlataformaContenedor {
     @Test
     void laCookieCsrfTienePrefijoHostYEsSegura() throws Exception {
         MvcResult resultado = mvc.perform(get("http://" + NORTE + "/api/sesion/csrf")).andReturn();
-        String setCookie = resultado.getResponse().getHeaders("Set-Cookie").stream()
-                .filter(c -> c.startsWith("__Host-XSRF-TOKEN=")).findFirst().orElseThrow();
-        assertThat(setCookie).contains("Secure", "Path=/", "SameSite=Strict");
-        assertThat(setCookie.toLowerCase()).doesNotContain("domain=", "httponly");
+        Cookie csrf = resultado.getResponse().getCookie("__Host-XSRF-TOKEN");
+        assertThat(csrf).isNotNull();
+        assertThat(csrf.getSecure()).isTrue();
+        assertThat(csrf.getPath()).isEqualTo("/");
+        assertThat(csrf.getDomain()).as("sin Domain").isNull();
+        assertThat(csrf.isHttpOnly()).as("Angular necesita leerla").isFalse();
+        // SameSite viaja como atributo de la cookie (Servlet 6); MockMvc no lo copia al texto del header.
+        assertThat(csrf.getAttribute("SameSite")).isEqualTo("Strict");
     }
 
     // ------------------------------------------------------------ OTRO GIMNASIO
@@ -240,9 +246,10 @@ class SesionIT extends MysqlPlataformaContenedor {
     }
 
     private Cookie ingresar(String host, String email, String clave) throws Exception {
-        Cookie sesion = intentarIngresar(host, email, clave).andExpect(status().isNoContent())
-                .andReturn().getResponse().getCookie("__Host-SESION");
-        assertThat(sesion).as("cookie de sesión").isNotNull();
+        MvcResult resultado = intentarIngresar(host, email, clave).andExpect(status().isNoContent()).andReturn();
+        Cookie sesion = resultado.getResponse().getCookie("__Host-SESION");
+        assertThat(sesion).as("cookie de sesión; Set-Cookie recibidos: %s", resultado.getResponse().getHeaders("Set-Cookie"))
+                .isNotNull();
         return sesion;
     }
 
