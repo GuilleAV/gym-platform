@@ -1,0 +1,15 @@
+# Perfil "demo" (desarrollo): al arrancar da de alta dos gimnasios de ejemplo.
+# El alta es idempotente: reiniciar la app no duplica nada.
+# Activarlo en IntelliJ: Run > Edit Configurations > Active profiles: demo
+#
+# Los dominios *.localhost apuntan a tu propia PC sin tocar el archivo hosts
+# (Chrome, Edge y Firefox los resuelven solos a 127.0.0.1).
+gym:
+  aprovisionamiento:
+    gimnasios:
+      - slug: gym-norte
+        nombre: Gym Norte
+        dominios: [gym-norte.localhost]
+      - slug: power-fit
+        nombre: Power Fit
+        dominios: [power-fit.localhost]
