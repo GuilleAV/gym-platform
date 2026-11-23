@@ -49,4 +49,4 @@ backend/data/
 backups/
 
 # ===== Maven Wrapper (el .jar se descarga solo; el script mvnw sí se versiona) =====
-.mvn/wrapper/maven-wrapper.jar
+**/.mvn/wrapper/maven-wrapper.jar

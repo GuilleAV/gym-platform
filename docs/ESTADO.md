@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — paso 0.1 cerrado, sigue el 0.2
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — paso 0.2 en curso (rama `feature/paso-0-2`)
 
 ---
 
@@ -18,6 +18,15 @@
   - `frontend/`: Angular 22.3.0 con Node 24 vía fnm. Tests, build y `npm start` funcionan en Windows.
   - Tests guardianes del compose: imágenes con versión exacta, puertos solo en 127.0.0.1, compose = pom.
   - Consola y correos en UTF-8 (`backend/.mvn/jvm.config`).
+
+- [~] **Paso 0.2 — EN CURSO** (rama `feature/paso-0-2`, sin mergear):
+  - Spring Modulith **2.1.1** (BOM en el pom) + `ModularidadTest`: `verify()` (límites y ciclos), guardia
+    anti-"verificación en vacío" y diagramas PlantUML en `target/spring-modulith-docs`.
+  - `.github/workflows/ci.yml`: backend (`./mvnw verify` con Testcontainers) y frontend (`npm ci`, tests, build)
+    en paralelo, permisos mínimos, cancelación de corridas viejas, reportes si falla.
+  - `.github/dependabot.yml`: maven, npm (Angular agrupado), github-actions y docker-compose (MySQL fijo en 8.4).
+  - ADR-0001: Maven 3.9.14 y Spring Modulith 2.1.1 fijados.
+  - **Falta:** generar el Maven Wrapper en IntelliJ, correr `verify` y (con el repo en GitHub) ver la CI en verde.
 
 ## Pendiente del usuario
 
@@ -53,11 +62,11 @@
 1. **Verificar los tests de integración** (no se confirmó al cerrar el 0.1): con Docker abierto, en IntelliJ →
    Maven → Lifecycle → `verify`. Tienen que pasar `MysqlVersionIT` y `CorreoNotificadorAlertasIT`.
    Si fallan, es lo primero que se corrige.
-2. **Paso 0.2** (rama `feature/paso-0-2`):
-   - Maven Wrapper (`mvnw`) commiteado.
-   - **Spring Modulith**: test que verifica que los módulos no usen clases internas de otros.
-   - **CI en GitHub Actions**: build + tests unitarios + integración (Testcontainers) en cada PR. Requiere el repo en GitHub (ver "Pendiente del usuario").
-   - Dependabot para avisos de versiones y CVEs.
+2. **Cerrar el paso 0.2** (rama `feature/paso-0-2`):
+   - Generar el wrapper en IntelliJ: Maven → *Execute Maven Goal* → `mvn -N wrapper:wrapper -Dmaven=3.9.14 -Dtype=only-script`
+     (con `backend` como proyecto). Claude lo commitea y marca `mvnw` como ejecutable (`git update-index --chmod=+x`).
+   - `verify` en IntelliJ: tienen que pasar `ModularidadTest`, `MysqlVersionIT` y `CorreoNotificadorAlertasIT`.
+   - Subir a GitHub, abrir PR a `main`, ver la CI en verde. Activar *Dependabot alerts* y *branch protection* en `main`.
 3. **Antes del 0.3:** redactar ADR-0002 (sesiones, secretos, usuario de aprovisionamiento, pools) y ADR-0003 (superadmin). Son las decisiones abiertas de la tabla de arriba.
 
 Plan completo de la Fase 0:
@@ -65,7 +74,7 @@ Plan completo de la Fase 0:
 | Paso | Contenido | Estado |
 |---|---|---|
 | 0.1 | docker-compose (MySQL, Mailpit), versiones fijadas, almacenamiento (ADR-0004), aviso de disco | ✅ cerrado |
-| 0.2 | Maven Wrapper + Spring Modulith + CI en GitHub Actions + Dependabot | ⏭️ siguiente |
+| 0.2 | Maven Wrapper + Spring Modulith + CI en GitHub Actions + Dependabot | 🔨 en curso |
 | 0.3 | Base `gym_platform` con Flyway (gimnasio, dominio, conexión) | |
 | 0.4 | Resolución del tenant (dominio → base), con limpieza del contexto | |
 | 0.5 | Aprovisionamiento idempotente de gym_001 y gym_002 | |

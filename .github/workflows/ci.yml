@@ -1,0 +1,83 @@
+# Integración continua: cada PR a main (y cada push a main) compila y corre TODOS los tests.
+# Si algo falla, el PR queda en rojo y no se mergea (configurar "branch protection" en GitHub).
+#
+# Por qué dos jobs separados: backend y frontend corren EN PARALELO en máquinas distintas,
+# así el resultado llega antes y un fallo en uno no oculta el estado del otro.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Mínimo privilegio: el token del workflow solo puede LEER el repo. Si una acción de terceros
+# fuera comprometida, no podría escribir código ni publicar nada.
+permissions:
+  contents: read
+
+# Si subís otro commit al mismo PR, se cancela la corrida anterior (ahorra minutos de CI).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Java 25 · unitarios + integración)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+
+      # JDK 25 de Eclipse Temurin, el mismo que usa IntelliJ en tu PC (ADR-0001).
+      # cache: maven guarda ~/.m2 entre corridas: no se bajan todas las dependencias cada vez.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      # verify = compilar + tests unitarios (Surefire) + tests de integración (Failsafe).
+      # Los runners ubuntu traen Docker, así que Testcontainers levanta MySQL 8.4 y Mailpit reales.
+      # -B = modo batch (sin colores ni barras de progreso); --no-transfer-progress = log limpio.
+      - name: ./mvnw verify
+        run: ./mvnw -B --no-transfer-progress verify
+
+      # Si falla, subimos los reportes para poder ver QUÉ test falló y por qué.
+      - name: Reportes de tests (si falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-backend
+          path: |
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
+          retention-days: 7
+
+  frontend:
+    name: Frontend (Angular 22 · tests + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+
+      # La versión de Node sale de frontend/.nvmrc: una sola fuente de verdad para tu PC y la CI.
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # npm ci (no npm install): instala EXACTAMENTE el package-lock.json y falla si no coincide
+      # con package.json. Builds reproducibles.
+      - run: npm ci
+      - run: npm run test:ci
+      # El build de producción detecta errores que los tests no ven (plantillas, presupuestos de tamaño).
+      - run: npm run build

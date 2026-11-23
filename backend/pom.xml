@@ -38,7 +38,31 @@
         <mysql.image>mysql:8.4.13</mysql.image>
         <!-- Imagen de Mailpit para los tests de integración. DEBE coincidir con infra/docker-compose.yml. -->
         <mailpit.image>axllent/mailpit:v1.34.0</mailpit.image>
+
+        <!--
+            Spring Modulith NO está en el BOM de Spring Boot, por eso fijamos su versión acá.
+            La línea 2.1.x es la que se compila contra Spring Boot 4.1 (ver ADR-0001).
+            Al subir Spring Boot de versión menor (4.2, ...), revisar la tabla de compatibilidad.
+        -->
+        <spring-modulith.version>2.1.1</spring-modulith.version>
     </properties>
+
+    <!--
+        dependencyManagement NO agrega dependencias: solo fija versiones. Importar el BOM de
+        Spring Modulith hace que todos sus artefactos (test, core, events...) usen la MISMA
+        versión, y abajo los declaramos sin <version>, igual que los de Spring Boot.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>${spring-modulith.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Núcleo de Spring Boot. Web, seguridad, JPA, Flyway, etc. se agregan en los
@@ -59,6 +83,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            Spring Modulith (solo tests por ahora): verifica que cada módulo de negocio
+            (paquete directo bajo com.gimnasio) no use clases internas de otro ni forme ciclos.
+            Ver ModularidadTest. Trae ArchUnit por debajo.
+        -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Testcontainers: levanta un MySQL REAL en Docker durante los tests (nunca H2). -->
