@@ -6,7 +6,7 @@ Formato: `NNNN-titulo-corto.md` (copiar `0000-plantilla.md`). Un ADR aceptado no
 
 | ADR | Título | Estado |
 |---|---|---|
-| 0001 | Stack y versiones | Propuesto |
+| 0001 | Stack y versiones | Aceptado |
 | 0002 | Sesiones, secretos y conexiones por tenant | Aceptado |
-| 0003 | Rol del superadministrador y sesión de soporte | Propuesto |
+| 0003 | Superadministrador con acceso total y soporte acotado | Aceptado |
 | 0004 | Almacenamiento y procesamiento de multimedia (disco del servidor) | Aceptado |
