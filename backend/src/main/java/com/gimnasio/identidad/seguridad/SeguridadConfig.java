@@ -58,6 +58,9 @@ class SeguridadConfig {
                 .authorizeHttpRequests(permisos -> permisos
                         .requestMatchers(HttpMethod.GET, "/api/gimnasio", "/api/gimnasio/bienvenida", "/api/sesion/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/sesion/ingresar").permitAll()
+                        // Segundo paso del ingreso: públicos, pero exigen el "ingreso pendiente" de la sesión.
+                        .requestMatchers(HttpMethod.POST, "/api/sesion/mfa/verificar", "/api/sesion/mfa/configurar",
+                                "/api/sesion/mfa/confirmar").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
                 .csrf(csrf -> {
