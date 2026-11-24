@@ -1,6 +1,6 @@
 # ADR-0001: Stack tecnológico y versiones
 
-- **Estado:** Propuesto (pendiente de aprobación del dueño del proyecto; ver `docs/ESTADO.md`)
+- **Estado:** Aceptado (2026-11-23, aprobado por el dueño del producto)
 - **Fecha:** 2026-11-23
 - **Decisores:** Dueño del producto + Claude (rol arquitecto)
 - **Origen:** Revisión técnica de la especificación v2, sección 1 ("Stack desactualizado").
