@@ -33,7 +33,7 @@ gym-platform/
 | Fase | Entrega |
 |---|---|
 | 0 — Fundaciones | gym_platform + 2 bases ficticias, resolución segura de tenant, Spring Security, pruebas de aislamiento |
-| 1 — MVP piloto | Landing, inscripciones, ABM, rutinas, kiosco, móvil, **comercial mínimo + caja** (propuesto) |
+| 1 — MVP piloto | Landing, inscripciones, ABM, rutinas, kiosco, móvil, **comercial mínimo + caja de recepción** (decidido el 23/11/2026) |
 | 2 — Operación | Mercado Pago, agenda, permisos avanzados, notificaciones, auditoría reforzada |
 | 3 — Comercial | Facturación ARCA, suscripciones, molinetes |
 

@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.5 mergeados en `main`; 0.6 en PR #8 (CI ✅); sigue 0.6b (MFA, límite de intentos, invitaciones) y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6 mergeados en `main`; siguen 0.6b (MFA, límite de intentos, invitaciones) y 0.7. **En paralelo: muestra comercial para DARE (Reconquista) el miércoles 2/12/2026.**
 
 ---
 
@@ -32,7 +32,8 @@
   - Bug aprendido: en `GRANT`, `_` en el nombre de la base es comodín → se escapa (`gym\_033`).
   - Pendiente técnico: Spring 7 no traduce el error 3819 (CHECK) a `DataIntegrityViolationException`; resolverlo
     cuando haya capa de API con validaciones (0.6+). Migrar automáticamente las bases existentes al arrancar.
-- [x] **Paso 0.6 — PR #8 (CI ✅):** módulo `identidad`. Usuarios en la base de cada gimnasio (V2), Argon2id
+- [x] **Muestra DARE (en curso):** presentación "DARE · Del papel al control total" (artefacto Slides), gimnasio de demo `dare.localhost` en el perfil demo, plan de estudio en Notion ("Gimnasio – Estudio del código"). Falta: pantallas de diseño, videos, ensayo y presupuesto.
+- [x] **Paso 0.6 — PR #8 (CI ✅, mergeado):** módulo `identidad`. Usuarios en la base de cada gimnasio (V2), Argon2id
   (OWASP: 19 MiB, t=2, p=1), Spring Session JDBC en la base del gimnasio actual, cookie `__Host-SESION`
   configurada en código (Boot 4 no aplicaba `server.servlet.session.cookie.*` a Spring Session: lo detectó
   SesionIT), CSRF SPA con `__Host-XSRF-TOKEN`, endpoints `/api/sesion/*`. Pantalla Angular mínima de login
@@ -56,7 +57,7 @@
 > Las notas personales y de la PC están en `docs/privado/notas-personales.md` (fuera de Git).
 
 - [ ] **Confirmar el stack:** Java 25 LTS, Spring Boot 4.1, MySQL 8.4 LTS, Angular 22. Si se aprueba, ADR-0001 pasa a **Aceptado**.
-- [ ] **Decidir el MVP:** ¿pasar el "comercial mínimo + caja de recepción" a la Fase 1? (ver revisión §2.1).
+- [x] **MVP decidido (23/11/2026):** el "comercial mínimo + caja de recepción" (planes, membresía, cuota mensual, cobro manual en recepción, saldo, caja del día) entra en la **Fase 1**. Mercado Pago queda en la Fase 2.
 - [ ] **Copiar los 3 `.docx` originales** a `docs/especificacion/`.
 - [ ] **MCP Engram:** instalado pero todavía no aparece en Claude (detalle en las notas privadas).
 - [ ] **Crear el repo privado `gym-platform` en GitHub** (vacío, sin README) y hacer:
