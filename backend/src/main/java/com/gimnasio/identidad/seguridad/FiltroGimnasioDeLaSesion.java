@@ -2,7 +2,6 @@ package com.gimnasio.identidad.seguridad;
 
 import java.io.IOException;
 
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,9 +40,7 @@ public class FiltroGimnasioDeLaSesion extends OncePerRequestFilter {
             if (!(gimnasioDeLaSesion instanceof Long id) || id != gimnasioDelRequest) {
                 sesion.invalidate();
                 SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-                response.getWriter().write("{\"type\":\"about:blank\",\"title\":\"Unauthorized\",\"status\":401}");
+                RespuestasDeSeguridad.noAutorizado(response);
                 return;
             }
         }

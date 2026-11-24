@@ -37,11 +37,19 @@ export class App implements OnInit {
     this.error.set('');
     const { email, clave } = this.formulario.getRawValue();
     try {
-      const ok = await this.sesion.ingresar(email, clave);
-      if (ok) {
-        this.formulario.reset();
-      } else {
-        this.error.set('Correo o contraseña incorrectos');
+      const resultado = await this.sesion.ingresar(email, clave);
+      switch (resultado.tipo) {
+        case 'ok':
+          this.formulario.reset();
+          break;
+        case 'invalido':
+          this.error.set('Correo o contraseña incorrectos');
+          break;
+        case 'bloqueado':
+          this.error.set(
+            `Demasiados intentos fallidos. Probá de nuevo en ${textoDeEspera(resultado.segundos)}.`,
+          );
+          break;
       }
     } catch {
       this.error.set('No se pudo conectar con el servidor. Probá de nuevo.');
@@ -53,4 +61,13 @@ export class App implements OnInit {
   protected async salir(): Promise<void> {
     await this.sesion.salir();
   }
+}
+
+/** 45 → "45 segundos"; 60 → "1 minuto"; 125 → "3 minutos" (siempre redondea hacia arriba). */
+export function textoDeEspera(segundos: number): string {
+  if (segundos < 60) {
+    return segundos === 1 ? '1 segundo' : `${segundos} segundos`;
+  }
+  const minutos = Math.ceil(segundos / 60);
+  return minutos === 1 ? '1 minuto' : `${minutos} minutos`;
 }

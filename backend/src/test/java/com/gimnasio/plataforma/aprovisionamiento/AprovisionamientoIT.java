@@ -88,12 +88,27 @@ class AprovisionamientoIT extends MysqlPlataformaContenedor {
     }
 
     @Test
-    void dejaElGimnasioActivoYLaConexionLista() {
+    void dejaElGimnasioActivoYLaConexionLista() throws java.io.IOException {
         assertThat(catalogo.queryForObject("SELECT estado FROM gimnasio WHERE id = ?", String.class, norte.gimnasioId()))
                 .isEqualTo("ACTIVO");
         DatosConexion conexion = conexiones.buscar(norte.gimnasioId()).orElseThrow();
         assertThat(conexion.estado()).isEqualTo("LISTA");
-        assertThat(norte.versionEsquema()).as("última migración de db/gimnasio").isEqualTo("2");
+        assertThat(norte.versionEsquema()).as("última migración de db/gimnasio").isEqualTo(ultimaMigracionDelEsquemaComun());
+    }
+
+    /**
+     * La versión más alta entre los archivos V{n}__*.sql de db/gimnasio. Se calcula en vez de escribirla
+     * a mano: así agregar una migración (V3, V4...) no rompe este test, pero sí lo rompe que el alta
+     * NO aplique todas las migraciones existentes.
+     */
+    private static String ultimaMigracionDelEsquemaComun() throws java.io.IOException {
+        int maxima = 0;
+        for (org.springframework.core.io.Resource archivo : new org.springframework.core.io.support.PathMatchingResourcePatternResolver()
+                .getResources("classpath:db/gimnasio/V*__*.sql")) {
+            String nombre = archivo.getFilename();
+            maxima = Math.max(maxima, Integer.parseInt(nombre.substring(1, nombre.indexOf("__"))));
+        }
+        return Integer.toString(maxima);
     }
 
     @Test
