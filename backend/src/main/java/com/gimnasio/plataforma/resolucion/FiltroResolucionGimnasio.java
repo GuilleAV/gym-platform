@@ -73,6 +73,15 @@ class FiltroResolucionGimnasio extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Si un request falla, Tomcat hace un segundo pasaje interno hacia /error. Ese pasaje también
+     * necesita el gimnasio (la sesión vive en su base), así que el filtro corre ahí también.
+     */
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
+
     private static void responderNoEncontrado(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);

@@ -30,6 +30,15 @@ spring:
     locations: classpath:db/plataforma
     # Si alguien editó una migración ya aplicada, Flyway detecta el checksum distinto y NO arranca.
     validate-on-migrate: true
+  # --- Sesiones (ADR-0002 §1) ----------------------------------------------------------
+  # Spring Session guarda cada sesión en la tabla "sesion" de la base de SU gimnasio.
+  session:
+    timeout: 30m                 # inactividad (administradores: 15 min cuando haya roles)
+    jdbc:
+      table-name: sesion
+      initialize-schema: never   # las tablas las crea Flyway (db/gimnasio/V2)
+      cleanup-cron: "-"          # desactivada: la reemplaza LimpiezaDeSesiones (recorre cada gimnasio)
+
   mail:
     # En desarrollo: Mailpit (infra/docker-compose.yml). En producción: el SMTP real, por variables de entorno.
     host: ${MAIL_HOST:localhost}
@@ -75,3 +84,5 @@ gym:
       intervalo: PT15M             # revisar cada 15 minutos
       demora-inicial: PT1M         # primera revisión, 1 minuto después de arrancar
       email-destino: ${GYM_ALERTAS_EMAIL:}   # vacío = solo queda en el log
+
+# La cookie de sesión (__Host-SESION) se configura en código: plataforma/sesiones/SesionesConfig.
