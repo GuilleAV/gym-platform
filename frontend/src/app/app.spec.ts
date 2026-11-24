@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { App, textoDeEspera } from './app';
 
 /** Deja correr las promesas pendientes (cada `await` del servicio) antes de responder la siguiente petición. */
 const esperar = () => new Promise((resolver) => setTimeout(resolver, 0));
@@ -86,6 +86,27 @@ describe('App (pantalla del gimnasio)', () => {
     expect(texto()).toContain('Correo o contraseña incorrectos');
   });
 
+  it('si hay demasiados intentos, muestra cuánto esperar (Retry-After)', async () => {
+    await arrancar(null);
+    escribir('input[type=email]', 'ana@correo.com');
+    escribir('input[type=password]', 'clave-equivocada');
+    elemento<HTMLFormElement>('form').dispatchEvent(new Event('submit'));
+    await esperar();
+
+    http
+      .expectOne('/api/sesion/ingresar')
+      .flush(null, {
+        status: 429,
+        statusText: 'Too Many Requests',
+        headers: { 'Retry-After': '90' },
+      });
+    await esperar();
+    await fixture.whenStable();
+
+    expect(texto()).toContain('Demasiados intentos fallidos. Probá de nuevo en 2 minutos.');
+    expect(texto()).not.toContain('No se pudo conectar');
+  });
+
   it('al ingresar bien, renueva el token CSRF y muestra al usuario', async () => {
     await arrancar(null);
     escribir('input[type=email]', 'ana@correo.com');
@@ -111,4 +132,14 @@ describe('App (pantalla del gimnasio)', () => {
     input.value = valor;
     input.dispatchEvent(new Event('input'));
   }
+});
+
+describe('textoDeEspera', () => {
+  it('redondea hacia arriba y usa singular o plural', () => {
+    expect(textoDeEspera(1)).toBe('1 segundo');
+    expect(textoDeEspera(45)).toBe('45 segundos');
+    expect(textoDeEspera(60)).toBe('1 minuto');
+    expect(textoDeEspera(61)).toBe('2 minutos');
+    expect(textoDeEspera(900)).toBe('15 minutos');
+  });
 });

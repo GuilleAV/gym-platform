@@ -19,6 +19,15 @@ export interface Usuario {
 export type EstadoCarga = 'cargando' | 'listo' | 'gimnasio-desconocido';
 
 /**
+ * Resultado de un intento de ingreso. Un "union type": TypeScript obliga a quien lo usa a contemplar
+ * los tres casos, y solo el caso 'bloqueado' trae los segundos de espera.
+ */
+export type ResultadoIngreso =
+  | { tipo: 'ok' }
+  | { tipo: 'invalido' }
+  | { tipo: 'bloqueado'; segundos: number };
+
+/**
  * Estado de la sesión del usuario en el gimnasio del dominio.
  *
  * Nunca manda un id de gimnasio: el backend lo deduce del dominio por el que entró el navegador
@@ -62,19 +71,25 @@ export class SesionService {
     this.estado.set('listo');
   }
 
-  /** Devuelve false si el correo o la clave no son válidos (el backend no dice cuál de los dos). */
-  async ingresar(email: string, clave: string): Promise<boolean> {
+  /**
+   * 'invalido' si el correo o la clave no son válidos (el backend no dice cuál de los dos);
+   * 'bloqueado' si hubo demasiados intentos fallidos (429), con los segundos que indica Retry-After.
+   */
+  async ingresar(email: string, clave: string): Promise<ResultadoIngreso> {
     try {
       await firstValueFrom(this.http.post<void>('/api/sesion/ingresar', { email, clave }));
     } catch (error) {
       if (esEstado(error, 401) || esEstado(error, 400)) {
-        return false;
+        return { tipo: 'invalido' };
+      }
+      if (error instanceof HttpErrorResponse && error.status === 429) {
+        return { tipo: 'bloqueado', segundos: segundosDeEspera(error) };
       }
       throw error;
     }
     await this.refrescarCsrf(); // al ingresar, el backend cambia el token CSRF
     await this.cargarUsuario();
-    return true;
+    return { tipo: 'ok' };
   }
 
   async salir(): Promise<void> {
@@ -99,6 +114,12 @@ export class SesionService {
       throw error;
     }
   }
+}
+
+/** Lee Retry-After (segundos). Si falta o no es un número, asume 60: mejor esperar de más que de menos. */
+function segundosDeEspera(error: HttpErrorResponse): number {
+  const valor = Number(error.headers.get('Retry-After'));
+  return Number.isFinite(valor) && valor > 0 ? Math.ceil(valor) : 60;
 }
 
 function esEstado(error: unknown, estado: number): boolean {
