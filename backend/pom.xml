@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
         <relativePath/>
     </parent>
 
@@ -44,10 +44,10 @@
             La línea 2.1.x es la que se compila contra Spring Boot 4.1 (ver ADR-0001).
             Al subir Spring Boot de versión menor (4.2, ...), revisar la tabla de compatibilidad.
         -->
-        <spring-modulith.version>2.1.1</spring-modulith.version>
+        <spring-modulith.version>2.2.0</spring-modulith.version>
         <!-- BouncyCastle: Argon2 de Spring Security lo necesita. NO está en el BOM de Boot.
              1.85+ corrige CVEs de 2026; Dependabot avisa las nuevas. -->
-        <bouncycastle.version>1.85.2</bouncycastle.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
     </properties>
 
     <!--
