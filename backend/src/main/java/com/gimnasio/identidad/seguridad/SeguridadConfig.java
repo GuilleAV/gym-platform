@@ -1,5 +1,6 @@
 package com.gimnasio.identidad.seguridad;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,6 +25,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 
+import java.time.Clock;
 import java.util.List;
 
 import com.gimnasio.identidad.Contrasenias;
@@ -43,6 +45,7 @@ import com.gimnasio.identidad.Contrasenias;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
+@EnableConfigurationProperties(PropiedadesSeguridad.class)
 class SeguridadConfig {
 
     /** Cookie del token CSRF con prefijo __Host-: no puede ser pisada desde otro subdominio (otro gimnasio). */
@@ -50,7 +53,7 @@ class SeguridadConfig {
 
     @Bean
     SecurityFilterChain cadenaDeSeguridad(HttpSecurity http, CookieCsrfTokenRepository tokensCsrf,
-            SecurityContextRepository contextos) throws Exception {
+            SecurityContextRepository contextos, Clock reloj, PropiedadesSeguridad propiedades) throws Exception {
         http
                 .authorizeHttpRequests(permisos -> permisos
                         .requestMatchers(HttpMethod.GET, "/api/gimnasio", "/api/gimnasio/bienvenida", "/api/sesion/csrf").permitAll()
@@ -71,8 +74,20 @@ class SeguridadConfig {
                 .logout(salir -> salir
                         .logoutUrl("/api/sesion/salir")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT)))
-                .addFilterAfter(new FiltroGimnasioDeLaSesion(), SecurityContextHolderFilter.class);
+                .addFilterAfter(new FiltroGimnasioDeLaSesion(), SecurityContextHolderFilter.class)
+                // Después de verificar el gimnasio: vida máxima de la sesión desde el ingreso.
+                .addFilterAfter(new FiltroVencimientoAbsoluto(reloj, propiedades.sesion().vencimientoAbsoluto()),
+                        FiltroGimnasioDeLaSesion.class);
         return http.build();
+    }
+
+    /**
+     * El reloj de la seguridad (bloqueos, vencimientos). Inyectarlo en vez de llamar a
+     * {@code System.currentTimeMillis()} permite que los tests usen un reloj fijo o adelantado.
+     */
+    @Bean
+    Clock reloj() {
+        return Clock.systemUTC();
     }
 
     @Bean

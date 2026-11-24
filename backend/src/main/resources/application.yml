@@ -34,6 +34,7 @@ spring:
   # Spring Session guarda cada sesión en la tabla "sesion" de la base de SU gimnasio.
   session:
     timeout: 30m                 # inactividad (administradores: 15 min cuando haya roles)
+                                 # vida máxima desde el ingreso: gym.seguridad.sesion.vencimiento-absoluto
     jdbc:
       table-name: sesion
       initialize-schema: never   # las tablas las crea Flyway (db/gimnasio/V2)
@@ -71,6 +72,17 @@ gym:
     usuario: gp_aprovisionador
     password: ${GP_APROVISIONADOR_DB_PASSWORD:}
     # gimnasios: se listan en application-demo.yml (perfil "demo").
+
+  # --- Seguridad del inicio de sesión (paso 0.6b) ---------------------------------------
+  seguridad:
+    ingreso:
+      fallos-por-cuenta: 5       # fallos seguidos con un mismo correo antes del primer bloqueo
+      fallos-por-ip: 20          # fallos desde una IP (con cualquier correo): frena el "password spraying"
+      bloqueo-inicial: PT1M      # primer bloqueo; cada fallo siguiente lo duplica (1, 2, 4, 8 min...)
+      bloqueo-maximo: PT15M      # tope: un atacante no puede dejar a alguien afuera por días
+      ventana: PT1H              # una hora sin fallos y el contador vuelve a cero
+    sesion:
+      vencimiento-absoluto: PT12H   # aunque se use sin parar, la sesión dura como máximo 12 h
 
   monitoreo:
     disco:
