@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.5 mergeados en `main`; 0.6 en PR #8 (CI ✅); sigue 0.6b (MFA, límite de intentos, invitaciones) y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6 en `main`; 0.6b parte 1 en PR #12 (CI ✅); siguen 0.6b parte 2 (MFA), parte 3 (invitaciones) y 0.7
 
 ---
 
@@ -21,6 +21,9 @@
 
 - [x] **Flujo de trabajo con CI (23/11/2026):** Claude trabaja en una copia del repo en la nube, sube ramas y
   lee la CI de GitHub Actions (Docker + Testcontainers) hasta dejarla en verde. El usuario hace `git pull`.
+  Para poder subir, Claude tiene que adjuntar el repo con permiso de escritura (`add_repo` con `push`). Desde la
+  carpeta `C:\Gimnasio` conectada **no** se puede hacer push (el entorno lo bloquea). En la nube no hay JDK 25 ni
+  Docker: el backend solo se compila y testea en la CI.
   **Nada se mergea a `main` sin el OK del usuario.**
 - [x] **Paso 0.3 — PR #2 (CI ✅):** `gym_platform` con Flyway (`gimnasio`, `gimnasio_dominio`, `gimnasio_conexion`,
   `secreto`), script `infra/mysql/init/01-plataforma.sh` (usuarios `gp_app` solo DML y `gp_aprovisionador`).
@@ -39,6 +42,14 @@
   (proxy sin cambiar Host + `allowedHosts: .localhost`). 121 tests backend + 6 frontend.
   - Desvío menor del ADR-0002: la tabla de atributos se llama `sesion_ATTRIBUTES` (la impone Spring Session).
   - Pendiente 0.6b: MFA de admins (ADR-0003), límite de intentos, invitación por correo, vencimiento absoluto de 12 h.
+- [x] **ADR-0001 y ADR-0003 aceptados — PR #11 (23/11/2026):** el dueño aprobó el stack y decidió que el
+  **superadmin tiene acceso total a todos los gimnasios, sin aprobación**. Se mantienen MFA obligatorio,
+  auditoría append-only e ingreso por token canjeado en el dominio del gimnasio. ⚖️ Validar contrato/privacidad con abogado.
+- [x] **Paso 0.6b parte 1 — PR #12 (CI ✅):** límite de intentos de ingreso (V3 `intento_ingreso`, por cuenta 5 y
+  por IP 20, bloqueo 1-2-4-8 min con tope 15, 429 + Retry-After sin comparar la clave, correo e IP como SHA-256)
+  y vencimiento absoluto de sesión a las 12 h (`FiltroVencimientoAbsoluto`). Parámetros en `gym.seguridad.*`.
+  Angular muestra el tiempo de espera. `AprovisionamientoIT` ya no tiene la versión del esquema escrita a mano.
+  - Pendiente deploy: `server.forward-headers-strategy` detrás de un proxy inverso (si no, todas las IPs son la del proxy).
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
   actualizar ADR-0001), #7 TypeScript 7 (CI ❌: Angular 22 no lo soporta → cerrar e ignorar mayores de TS).
