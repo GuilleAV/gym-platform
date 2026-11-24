@@ -1,4 +1,4 @@
-# Perfil "demo" (desarrollo): al arrancar da de alta dos gimnasios de ejemplo.
+# Perfil "demo" (desarrollo): al arrancar da de alta los gimnasios de ejemplo.
 # El alta es idempotente: reiniciar la app no duplica nada.
 # Activarlo en IntelliJ: Run > Edit Configurations > Program arguments: --spring.profiles.active=demo
 #
@@ -14,6 +14,10 @@ spring:
 gym:
   aprovisionamiento:
     gimnasios:
+      # DARE (Reconquista): gimnasio de la muestra comercial del 2/12/2026.
+      - slug: dare
+        nombre: DARE
+        dominios: [dare.localhost]
       - slug: gym-norte
         nombre: Gym Norte
         dominios: [gym-norte.localhost]
@@ -25,6 +29,9 @@ gym:
   demo:
     clave: ${GYM_DEMO_CLAVE:}
     usuarios:
+      - gimnasio: dare
+        email: admin@dare.localhost
+        nombre: Admin DARE
       - gimnasio: gym-norte
         email: admin@gym-norte.localhost
         nombre: Admin Gym Norte
