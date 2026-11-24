@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6 en `main`; 0.6b parte 1 en PR #12 (CI ✅); siguen 0.6b parte 2 (MFA), parte 3 (invitaciones) y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 1 en `main`; 0.6b parte 2 (roles + MFA) en PR #13 (CI ✅); siguen pantallas de MFA en Angular, 0.6b parte 3 (invitaciones) y 0.7
 
 ---
 
@@ -50,6 +50,14 @@
   y vencimiento absoluto de sesión a las 12 h (`FiltroVencimientoAbsoluto`). Parámetros en `gym.seguridad.*`.
   Angular muestra el tiempo de espera. `AprovisionamientoIT` ya no tiene la versión del esquema escrita a mano.
   - Pendiente deploy: `server.forward-headers-strategy` detrás de un proxy inverso (si no, todas las IPs son la del proxy).
+- [x] **Paso 0.6b parte 2 — PR #13 (CI ✅) · ADR-0005:** roles como datos (`rol` con campo `mfa`, `usuario_rol` N a N;
+  4 iniciales: ADMINISTRADOR y RECEPCION con MFA). Decisión del dueño: MFA sí/no **por rol y por gimnasio**, sin
+  "opcional"; solo el superadmin lo cambia (`ServicioRoles`, sin endpoint HTTP todavía); MFA del superadmin
+  configurable con correo de aviso (se programa con la identidad de plataforma). TOTP RFC 6238 propio (Spring
+  Security 7 no trae TOTP), ingreso en dos pasos (`/api/sesion/mfa/*`), 10 códigos de recuperación (Argon2id),
+  secreto cifrado vía `CifradoDeDatos`. `MfaIT` 16 casos.
+  - Pendiente: pantallas de Angular para el MFA (QR, código, códigos de recuperación). Los usuarios de demo no tienen roles.
+  - Entorno de Claude: sin JDK 25 ni Maven Central; la CI corre al **abrir el PR**, no con el push.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
   actualizar ADR-0001), #7 TypeScript 7 (CI ❌: Angular 22 no lo soporta → cerrar e ignorar mayores de TS).
