@@ -63,6 +63,30 @@ public class ResolutorSecretos {
         return "cifrado:" + repositorio.guardar(cifrador().cifrar(secreto));
     }
 
+    /**
+     * Cifra un dato para guardarlo en una columna (no en la tabla {@code secreto}). Devuelve
+     * versión de la clave (4 bytes) + IV (12 bytes) + texto cifrado, todo junto en un solo arreglo.
+     */
+    public byte[] cifrarEmpaquetado(String dato) {
+        SecretoCifrado cifrado = cifrador().cifrar(dato);
+        return java.nio.ByteBuffer.allocate(Integer.BYTES + cifrado.iv().length + cifrado.cifrado().length)
+                .putInt(cifrado.versionClave()).put(cifrado.iv()).put(cifrado.cifrado()).array();
+    }
+
+    /** Inverso de {@link #cifrarEmpaquetado}. Falla si el dato fue alterado o la clave no corresponde. */
+    public String descifrarEmpaquetado(byte[] empaquetado) {
+        if (empaquetado == null || empaquetado.length <= Integer.BYTES + 12) {
+            throw new IllegalArgumentException("Dato cifrado inválido");
+        }
+        java.nio.ByteBuffer buffer = java.nio.ByteBuffer.wrap(empaquetado);
+        int version = buffer.getInt();
+        byte[] iv = new byte[12];
+        buffer.get(iv);
+        byte[] cifrado = new byte[buffer.remaining()];
+        buffer.get(cifrado);
+        return cifrador().descifrar(new SecretoCifrado(version, iv, cifrado));
+    }
+
     /** Se crea recién cuando se usa: la app puede arrancar sin clave maestra si no maneja secretos cifrados. */
     private CifradorSecretos cifrador() {
         CifradorSecretos actual = cifrador;

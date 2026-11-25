@@ -10,3 +10,4 @@ Formato: `NNNN-titulo-corto.md` (copiar `0000-plantilla.md`). Un ADR aceptado no
 | 0002 | Sesiones, secretos y conexiones por tenant | Aceptado |
 | 0003 | Superadministrador con acceso total y soporte acotado | Aceptado |
 | 0004 | Almacenamiento y procesamiento de multimedia (disco del servidor) | Aceptado |
+| 0005 | Roles como datos y MFA definido por rol | Aceptado |

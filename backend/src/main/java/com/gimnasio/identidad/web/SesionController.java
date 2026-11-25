@@ -12,10 +12,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gimnasio.identidad.Contrasenias;
 import com.gimnasio.identidad.ServicioUsuarios;
-import com.gimnasio.identidad.seguridad.FiltroGimnasioDeLaSesion;
-import com.gimnasio.identidad.seguridad.FiltroVencimientoAbsoluto;
+import com.gimnasio.identidad.mfa.RequisitoMfa;
+import com.gimnasio.identidad.mfa.ServicioMfa;
 import com.gimnasio.identidad.seguridad.LimitadorDeIntentos;
 import com.gimnasio.plataforma.ContextoGimnasio;
 
@@ -40,7 +36,7 @@ import jakarta.servlet.http.HttpServletResponse;
 class SesionController {
 
     /** Misma respuesta para correo inexistente, clave incorrecta o cuenta suspendida: no damos pistas. */
-    private static final Map<String, Object> CREDENCIALES_INVALIDAS =
+    static final Map<String, Object> CREDENCIALES_INVALIDAS =
             Map.of("type", "about:blank", "title", "Unauthorized", "status", 401);
 
     /** Correo o IP bloqueados por demasiados fallos. Mismo cuerpo exista o no el correo. */
@@ -48,18 +44,18 @@ class SesionController {
             Map.of("type", "about:blank", "title", "Too Many Requests", "status", 429);
 
     private final AuthenticationManager autenticacion;
-    private final SessionAuthenticationStrategy estrategiaAlIngresar;
-    private final SecurityContextRepository contextos;
+    private final FinalizadorDeIngreso finalizador;
     private final ServicioUsuarios usuarios;
+    private final ServicioMfa mfa;
     private final LimitadorDeIntentos limitador;
     private final Clock reloj;
 
-    SesionController(AuthenticationManager autenticacion, SessionAuthenticationStrategy estrategiaAlIngresar,
-            SecurityContextRepository contextos, ServicioUsuarios usuarios, LimitadorDeIntentos limitador, Clock reloj) {
+    SesionController(AuthenticationManager autenticacion, FinalizadorDeIngreso finalizador, ServicioUsuarios usuarios,
+            ServicioMfa mfa, LimitadorDeIntentos limitador, Clock reloj) {
         this.autenticacion = autenticacion;
-        this.estrategiaAlIngresar = estrategiaAlIngresar;
-        this.contextos = contextos;
+        this.finalizador = finalizador;
         this.usuarios = usuarios;
+        this.mfa = mfa;
         this.limitador = limitador;
         this.reloj = reloj;
     }
@@ -83,8 +79,9 @@ class SesionController {
     /**
      * {@code POST /api/sesion/ingresar}: {"email": "...", "clave": "..."} → 204 + cookie de sesión.
      *
-     * <p>Respuestas: 204 si ingresó; 401 si el correo o la clave no son válidos (sin decir cuál); 429 con
-     * {@code Retry-After} si el correo o la IP están bloqueados por demasiados fallos; 400 si faltan datos.</p>
+     * <p>Respuestas: 204 si ingresó; 200 con {@code {"paso": "CODIGO_MFA" | "CONFIGURAR_MFA"}} si la clave es
+     * correcta pero falta el segundo factor (la sesión todavía NO está autenticada); 401 si el correo o la clave
+     * no son válidos (sin decir cuál); 429 con {@code Retry-After} si hay demasiados fallos; 400 si faltan datos.</p>
      */
     @PostMapping("/api/sesion/ingresar")
     ResponseEntity<?> ingresar(@RequestBody Credenciales credenciales, HttpServletRequest request,
@@ -113,18 +110,18 @@ class SesionController {
         }
         limitador.registrarExito(email);
 
-        estrategiaAlIngresar.onAuthentication(autenticado, request, response);
-        SecurityContext contexto = SecurityContextHolder.createEmptyContext();
-        contexto.setAuthentication(autenticado);
-        SecurityContextHolder.setContext(contexto);
-        request.getSession().setAttribute(FiltroGimnasioDeLaSesion.ATRIBUTO_GIMNASIO, ContextoGimnasio.actual().id());
-        request.getSession().setAttribute(FiltroVencimientoAbsoluto.ATRIBUTO_INGRESO, reloj.millis());
-        contextos.saveContext(contexto, request, response);
-        return ResponseEntity.noContent().build();
+        RequisitoMfa requisito = mfa.requisitoPara(email);
+        if (requisito == RequisitoMfa.NO_REQUERIDO) {
+            finalizador.finalizar(autenticado, request, response);
+            return ResponseEntity.noContent().build();
+        }
+        // Falta el segundo factor: la sesión solo recuerda "pasó la contraseña" (5 min), sin autenticar.
+        IngresoPendiente.guardar(request, email, requisito, reloj.millis());
+        return ResponseEntity.ok(Map.of("paso", requisito == RequisitoMfa.CODIGO ? "CODIGO_MFA" : "CONFIGURAR_MFA"));
     }
 
     /** 429 + Retry-After en segundos (redondeado hacia arriba: nunca decir "ya podés" antes de tiempo). */
-    private static ResponseEntity<Map<String, Object>> demasiadosIntentos(Duration falta) {
+    static ResponseEntity<Map<String, Object>> demasiadosIntentos(Duration falta) {
         long segundos = Math.max(1, (falta.toMillis() + 999) / 1000);
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header(HttpHeaders.RETRY_AFTER, Long.toString(segundos))

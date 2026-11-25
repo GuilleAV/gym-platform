@@ -40,6 +40,29 @@ public class ServicioUsuarios {
                 normalizarEmail(email), nombre, codificador.encode(clave));
     }
 
+    /**
+     * Le asigna un rol al usuario (idempotente: si ya lo tenía, no hace nada). Un usuario puede tener
+     * varios roles (ADR-0005).
+     */
+    public void asignarRol(String email, String codigoRol) {
+        int encontrados = base.jdbc().update("""
+                INSERT IGNORE INTO usuario_rol (usuario_id, rol_id)
+                SELECT u.id, r.id FROM usuario u JOIN rol r ON r.codigo = ?
+                WHERE u.email = ?
+                """, codigoRol, normalizarEmail(email));
+        if (encontrados == 0 && !rolesDe(email).contains(codigoRol)) {
+            throw new IllegalArgumentException("Usuario o rol inexistente");
+        }
+    }
+
+    /** Códigos de los roles del usuario (activos o no). */
+    public java.util.List<String> rolesDe(String email) {
+        return base.jdbc().queryForList("""
+                SELECT r.codigo FROM rol r JOIN usuario_rol ur ON ur.rol_id = r.id JOIN usuario u ON u.id = ur.usuario_id
+                WHERE u.email = ? ORDER BY r.codigo
+                """, String.class, normalizarEmail(email));
+    }
+
     public Optional<String> nombreDe(String email) {
         return base.jdbc().queryForList("SELECT nombre FROM usuario WHERE email = ?", String.class, normalizarEmail(email))
                 .stream().findFirst();
