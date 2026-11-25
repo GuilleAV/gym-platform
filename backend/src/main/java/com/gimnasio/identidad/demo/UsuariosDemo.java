@@ -19,7 +19,9 @@ import com.gimnasio.plataforma.Gimnasios;
 
 /**
  * Perfil demo: crea un usuario administrador en cada gimnasio de ejemplo, con la clave de
- * {@code GYM_DEMO_CLAVE} (en tu .env). Corre DESPUÉS del alta de gimnasios (@Order 20 > 10).
+ * {@code GYM_DEMO_CLAVE} (en tu .env) y los roles configurados (ADMINISTRADOR: entra a /recepcion y, como
+ * el rol tiene MFA, la primera vez pide configurar la app de códigos). Corre DESPUÉS del alta de gimnasios
+ * (@Order 20 > 10).
  * Solo para desarrollo: el alta real de usuarios será por invitación.
  */
 @Component
@@ -32,7 +34,8 @@ class UsuariosDemo implements ApplicationRunner {
     @ConfigurationProperties("gym.demo")
     record Propiedades(String clave, @DefaultValue List<Usuario> usuarios) {
 
-        record Usuario(String gimnasio, String email, String nombre) {
+        /** @param roles códigos de rol a asignarle (ej. ADMINISTRADOR); por defecto, ninguno */
+        record Usuario(String gimnasio, String email, String nombre, @DefaultValue List<String> roles) {
         }
 
         @Override
@@ -65,9 +68,10 @@ class UsuariosDemo implements ApplicationRunner {
                     .orElseThrow(() -> new IllegalStateException("Gimnasio de demo inexistente: " + usuario.gimnasio()));
             ContextoGimnasio.ejecutarPara(gimnasio, () -> {
                 servicio.crearActivoSiNoExiste(usuario.email(), usuario.nombre(), propiedades.clave());
+                usuario.roles().forEach(rol -> servicio.asignarRol(usuario.email(), rol)); // idempotente
                 return null;
             });
-            LOG.info("Usuario de demo listo: {} en {}", usuario.email(), usuario.gimnasio());
+            LOG.info("Usuario de demo listo: {} en {} con roles {}", usuario.email(), usuario.gimnasio(), usuario.roles());
         }
     }
 }

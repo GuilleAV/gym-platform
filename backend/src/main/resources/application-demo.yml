@@ -22,12 +22,16 @@ gym:
         dominios: [power-fit.localhost]
 
   # Usuario administrador de ejemplo en cada gimnasio. La clave sale de GYM_DEMO_CLAVE (tu .env).
+  # Con el rol ADMINISTRADOR entra a /recepcion. Ese rol tiene MFA: la primera vez te pide escanear un QR
+  # con una app de autenticación (Google Authenticator, Microsoft Authenticator...).
   demo:
     clave: ${GYM_DEMO_CLAVE:}
     usuarios:
       - gimnasio: gym-norte
         email: admin@gym-norte.localhost
         nombre: Admin Gym Norte
+        roles: [ADMINISTRADOR]
       - gimnasio: power-fit
         email: admin@power-fit.localhost
         nombre: Admin Power Fit
+        roles: [ADMINISTRADOR]
