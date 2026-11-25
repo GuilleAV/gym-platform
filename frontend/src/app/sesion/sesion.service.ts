@@ -14,7 +14,12 @@ export interface Usuario {
   email: string;
   nombre: string;
   gimnasio: string;
+  /** Solo para mostrar u ocultar menús: la seguridad real la decide el backend en cada pedido. */
+  roles?: string[];
 }
+
+/** Roles que trabajan en el mostrador (ADR-0007 §3). */
+const ROLES_DE_PERSONAL = ['ADMINISTRADOR', 'RECEPCION'];
 
 export type EstadoCarga = 'cargando' | 'listo' | 'gimnasio-desconocido';
 
@@ -61,14 +66,32 @@ export class SesionService {
   readonly bienvenida = signal('');
   readonly usuario = signal<Usuario | null>(null);
   readonly conectado = computed(() => this.usuario() !== null);
+  /** ¿Mostrar el menú de recepción? (el backend igual responde 403 si no corresponde) */
+  readonly esPersonal = computed(() =>
+    (this.usuario()?.roles ?? []).some((rol) => ROLES_DE_PERSONAL.includes(rol)),
+  );
+  private carga: Promise<void> | null = null;
   /**
    * Códigos de recuperación recién generados. Se guardan ANTES de cargar al usuario para que la
    * pantalla los muestre primero (si no, se vería un instante la bienvenida). Solo viven en memoria.
    */
   readonly codigosRecuperacion = signal<string[] | null>(null);
 
-  /** Carga el gimnasio del dominio, el token CSRF y, si hay sesión, el usuario. */
-  async iniciar(): Promise<void> {
+  /**
+   * Espera a que termine la carga inicial. La usan los guards de rutas: si alguien entra directo a
+   * /recepcion, hay que saber primero quién es antes de decidir si puede verla.
+   */
+  esperarCarga(): Promise<void> {
+    return this.carga ?? this.iniciar();
+  }
+
+  /** Carga el gimnasio del dominio, el token CSRF y, si hay sesión, el usuario (una sola vez). */
+  iniciar(): Promise<void> {
+    this.carga ??= this.cargar();
+    return this.carga;
+  }
+
+  private async cargar(): Promise<void> {
     try {
       this.gimnasio.set(await firstValueFrom(this.http.get<Gimnasio>('/api/gimnasio')));
     } catch (error) {

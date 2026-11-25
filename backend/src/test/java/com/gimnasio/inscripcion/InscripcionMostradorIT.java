@@ -140,6 +140,12 @@ class InscripcionMostradorIT extends MysqlPlataformaContenedor {
     // ---------------------------------------------------------------- permisos
 
     @Test
+    void yoInformaLosRolesParaQueAngularMuestreElMenuCorrecto() throws Exception {
+        mvc.perform(get("http://" + NORTE + "/api/sesion/yo").cookie(recepcionNorte))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value("RECEPCION"));
+    }
+
+    @Test
     void sinSesionDa401() throws Exception {
         inscribir(NORTE, null, pedido("X", "Y", null, "1990-01-01")).andExpect(status().isUnauthorized());
     }

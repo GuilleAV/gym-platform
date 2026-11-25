@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 24/11/2026 · **Fase actual:** Fase 0 — identidad completa en `main` (login por código, MFA por rol, pantallas); inscripción: mostrador en `main`, ficha en PR #18; siguen pantallas de inscripción, passkeys y 0.7
+**Última actualización:** 24/11/2026 · **Fase actual:** Fase 0 — identidad completa en `main` (login por código, MFA por rol, pantallas); inscripción: backend en `main`, pantallas en PR #19; siguen passkeys, bandeja del modo COMPLETO y 0.7
 
 ---
 
@@ -83,8 +83,13 @@
   documentos legales **versionados** (`documento_legal`, `aceptacion_documento` con medio, quién aceptó y quién
   registró; textos de ejemplo ⚖️). Al enviar: modo SIMPLE → alumno y cuenta ACTIVOS con rol ALUMNO; COMPLETO →
   EN_REVISION. `FichaIT`, `DatosFichaTest`.
-  - Pendiente: pantallas de Angular (recepción y ficha), bandeja de aprobación del modo COMPLETO, formulario
-    público con captcha, apto físico y salud (configurables por gimnasio), quitar UPDATE/DELETE sobre `auditoria`.
+  - Pendiente: bandeja de aprobación del modo COMPLETO, formulario público con captcha, apto físico y salud
+    (configurables por gimnasio), quitar UPDATE/DELETE sobre `auditoria`.
+- [x] **Pantallas de inscripción — PR #19:** rutas de Angular (`App` pasa a ser el marco con `<router-outlet>`):
+  `/` (`PaginaInicio`, el ingreso; el personal ve "Ir a recepción"), `/invitacion` (lee el token del fragmento y lo
+  borra de la barra) y `/recepcion` (guard `soloPersonal`: inscribir, fichas pendientes, reenviar, completar ficha),
+  las dos últimas en diferido. `FormularioFicha` compartido entre invitación y mostrador. `/api/sesion/yo` devuelve
+  los roles (solo para menús). 44 tests de Angular.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
   actualizar ADR-0001), #7 TypeScript 7 (CI ❌: Angular 22 no lo soporta → cerrar e ignorar mayores de TS).
