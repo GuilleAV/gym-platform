@@ -96,15 +96,40 @@ export class SesionService {
    * 'bloqueado' si hubo demasiados intentos fallidos (429), con los segundos que indica Retry-After.
    */
   async ingresar(email: string, clave: string): Promise<ResultadoIngreso> {
+    return this.primerFactor('/api/sesion/ingresar', { email, clave });
+  }
+
+  /**
+   * Pide que le manden un código al correo (ADR-0006). Devuelve false solo si el correo es inválido:
+   * el backend responde lo mismo exista o no, así que acá nunca se sabe si está registrado.
+   */
+  async solicitarCodigo(email: string): Promise<boolean> {
+    try {
+      await firstValueFrom(this.http.post<unknown>('/api/sesion/codigo/solicitar', { email }));
+      return true;
+    } catch (error) {
+      if (esEstado(error, 400)) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /** Ingresa con el código que llegó por correo. Mismas respuestas que con la contraseña. */
+  async ingresarConCodigo(email: string, codigo: string): Promise<ResultadoIngreso> {
+    return this.primerFactor('/api/sesion/codigo/ingresar', { email, codigo });
+  }
+
+  /**
+   * Contraseña o código por correo: el backend responde igual en los dos casos (ADR-0006 §2).
+   * 204 = adentro; 200 con "paso" = falta el segundo factor; 401/400 = inválido; 429 = bloqueado.
+   */
+  private async primerFactor(url: string, cuerpo: object): Promise<ResultadoIngreso> {
     let respuesta: HttpResponse<{ paso?: string } | null>;
     try {
-      // observe: 'response' para ver el código HTTP: 204 = adentro; 200 = falta el segundo factor.
+      // observe: 'response' para ver el código HTTP, no solo el cuerpo.
       respuesta = await firstValueFrom(
-        this.http.post<{ paso?: string } | null>(
-          '/api/sesion/ingresar',
-          { email, clave },
-          { observe: 'response' },
-        ),
+        this.http.post<{ paso?: string } | null>(url, cuerpo, { observe: 'response' }),
       );
     } catch (error) {
       if (esEstado(error, 401) || esEstado(error, 400)) {

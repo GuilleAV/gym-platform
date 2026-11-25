@@ -78,6 +78,7 @@ describe('App (pantalla del gimnasio)', () => {
 
   it('con credenciales inválidas muestra un mensaje genérico', async () => {
     await arrancar(null);
+    await aContrasenia();
     escribir('input[type=email]', 'ana@correo.com');
     escribir('input[type=password]', 'clave-equivocada');
     elemento<HTMLFormElement>('form').dispatchEvent(new Event('submit'));
@@ -95,6 +96,7 @@ describe('App (pantalla del gimnasio)', () => {
 
   it('si hay demasiados intentos, muestra cuánto esperar (Retry-After)', async () => {
     await arrancar(null);
+    await aContrasenia();
     escribir('input[type=email]', 'ana@correo.com');
     escribir('input[type=password]', 'clave-equivocada');
     elemento<HTMLFormElement>('form').dispatchEvent(new Event('submit'));
@@ -114,6 +116,7 @@ describe('App (pantalla del gimnasio)', () => {
 
   it('al ingresar bien, renueva el token CSRF y muestra al usuario', async () => {
     await arrancar(null);
+    await aContrasenia();
     escribir('input[type=email]', 'ana@correo.com');
     escribir('input[type=password]', 'clave-correcta-123');
     elemento<HTMLFormElement>('form').dispatchEvent(new Event('submit'));
@@ -132,11 +135,123 @@ describe('App (pantalla del gimnasio)', () => {
     expect(texto()).toContain('Hola, Ana');
   });
 
+  /** Desde la pantalla del correo, va al ingreso con contraseña. */
+  async function aContrasenia(): Promise<void> {
+    boton('Prefiero usar contraseña').click();
+    await refrescar();
+  }
+
   function escribir(selector: string, valor: string): void {
     const input = elemento<HTMLInputElement>(selector);
     input.value = valor;
     input.dispatchEvent(new Event('input'));
   }
+
+  // --------------------------------------------------- ingreso por correo (ADR-0006)
+
+  it('la primera pantalla pide solo el correo, sin contraseña', async () => {
+    await arrancar(null);
+
+    expect(texto()).toContain('No necesitás contraseña');
+    expect(elemento('input[type=password]')).toBeNull();
+  });
+
+  /** Escribe el correo, toca Continuar y responde el 202 del backend. */
+  async function pedirCodigo(email: string): Promise<void> {
+    await arrancar(null);
+    escribir('app-paso-correo input', email);
+    elemento<HTMLFormElement>('app-paso-correo form').dispatchEvent(new Event('submit'));
+    await esperar();
+    const solicitud = http.expectOne('/api/sesion/codigo/solicitar');
+    expect(solicitud.request.body).toEqual({ email });
+    solicitud.flush({ estado: 'ok' }, { status: 202, statusText: 'Accepted' });
+    await refrescar();
+  }
+
+  async function escribirCodigoDelCorreo(codigo: string): Promise<void> {
+    escribir('app-paso-codigo-correo input', codigo);
+    elemento<HTMLFormElement>('app-paso-codigo-correo form').dispatchEvent(new Event('submit'));
+    await esperar();
+  }
+
+  it('con el código del correo entra sin contraseña', async () => {
+    await pedirCodigo('ana@correo.com');
+    expect(texto()).toContain('Revisá tu correo');
+    expect(texto()).toContain('ana@correo.com');
+
+    await escribirCodigoDelCorreo('482913');
+    const ingreso = http.expectOne('/api/sesion/codigo/ingresar');
+    expect(ingreso.request.body).toEqual({ email: 'ana@correo.com', codigo: '482913' });
+    ingreso.flush(null, { status: 204, statusText: 'No Content' });
+    await esperar();
+    http.expectOne('/api/sesion/csrf').flush(null);
+    await esperar();
+    http
+      .expectOne('/api/sesion/yo')
+      .flush({ email: 'ana@correo.com', nombre: 'Ana', gimnasio: 'gym-norte' });
+    await refrescar();
+
+    expect(texto()).toContain('Hola, Ana');
+  });
+
+  it('con un código incorrecto lo dice y deja reintentar', async () => {
+    await pedirCodigo('ana@correo.com');
+    await escribirCodigoDelCorreo('000000');
+    http
+      .expectOne('/api/sesion/codigo/ingresar')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    await refrescar();
+
+    expect(texto()).toContain('no es correcto o ya venció');
+    expect(elemento('app-paso-codigo-correo form')).toBeTruthy();
+  });
+
+  it('si el rol exige MFA, después del código del correo pide el de la app', async () => {
+    await pedirCodigo('admin@correo.com');
+    await escribirCodigoDelCorreo('482913');
+    http.expectOne('/api/sesion/codigo/ingresar').flush({ paso: 'CODIGO_MFA' });
+    await refrescar();
+
+    expect(texto()).toContain('Verificación en dos pasos');
+  });
+
+  it('el botón de reenviar arranca deshabilitado (hay que esperar un minuto)', async () => {
+    await pedirCodigo('ana@correo.com');
+
+    expect(boton('Reenviar código').disabled).toBe(true);
+    expect(texto()).toMatch(/Reenviar código en \d+ s/);
+  });
+
+  it('desde el código puede pasar a la contraseña con el correo ya escrito', async () => {
+    await pedirCodigo('ana@correo.com');
+    boton('Prefiero usar contraseña').click();
+    await refrescar();
+
+    expect(elemento<HTMLInputElement>('app-paso-clave input[type=email]').value).toBe(
+      'ana@correo.com',
+    );
+    expect(elemento('input[type=password]')).toBeTruthy();
+  });
+
+  it('"Usar otro correo" vuelve a la primera pantalla', async () => {
+    await pedirCodigo('ana@correo.com');
+    boton('Usar otro correo').click();
+    await refrescar();
+
+    expect(elemento('app-paso-correo')).toBeTruthy();
+  });
+
+  it('la contraseña se puede mostrar para no equivocarse al tipear', async () => {
+    await arrancar(null);
+    await aContrasenia();
+    expect(elemento('app-paso-clave input[type=password]')).toBeTruthy();
+
+    boton('Mostrar contraseña').click();
+    await refrescar();
+
+    expect(elemento('app-paso-clave input[type=password]')).toBeNull();
+    expect(texto()).toContain('Ocultar contraseña');
+  });
 
   // ------------------------------------------------------------------ MFA (ADR-0005)
 
@@ -154,6 +269,7 @@ describe('App (pantalla del gimnasio)', () => {
   /** Pone correo y clave y responde al POST /ingresar con el paso de MFA indicado. */
   async function pasarLaClave(paso: 'CODIGO_MFA' | 'CONFIGURAR_MFA'): Promise<void> {
     await arrancar(null);
+    await aContrasenia();
     escribir('input[type=email]', 'admin@correo.com');
     escribir('input[type=password]', 'clave-correcta');
     elemento<HTMLFormElement>('form').dispatchEvent(new Event('submit'));
@@ -235,12 +351,12 @@ describe('App (pantalla del gimnasio)', () => {
     expect(texto()).toContain('Hola');
   });
 
-  it('"Volver" regresa al formulario de correo y contraseña', async () => {
+  it('"Volver" desde el MFA regresa a la primera pantalla', async () => {
     await pasarLaClave('CODIGO_MFA');
     boton('Volver').click();
     await refrescar();
 
-    expect(texto()).toContain('Iniciar sesión');
+    expect(elemento('app-paso-correo')).toBeTruthy();
     expect(elemento('app-paso-codigo-mfa')).toBeNull();
   });
 
