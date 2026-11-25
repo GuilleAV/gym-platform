@@ -15,10 +15,11 @@
         }
       </header>
 
+      <!-- Orden importante: los códigos de recuperación se muestran UNA vez, antes que nada. -->
       @if (sesion.codigosRecuperacion(); as codigos) {
         <app-codigos-recuperacion
           [codigos]="codigos"
-          (listo)="sesion.descartarCodigosRecuperacion(); volverAClave()"
+          (listo)="sesion.descartarCodigosRecuperacion(); irA('correo')"
         />
       } @else if (sesion.usuario(); as usuario) {
         <section class="tarjeta">
@@ -28,26 +29,37 @@
           <p class="secundario">{{ usuario.email }}</p>
           <button type="button" (click)="salir()">Cerrar sesión</button>
         </section>
-      } @else if (paso() === 'codigo-mfa') {
-        <app-paso-codigo-mfa (volver)="volverAClave()" />
-      } @else if (paso() === 'configurar-mfa') {
-        <app-paso-configurar-mfa (volver)="volverAClave()" />
       } @else {
-        <form class="tarjeta" [formGroup]="formulario" (ngSubmit)="ingresar()">
-          <h2>Iniciar sesión</h2>
-          <label>
-            Correo
-            <input type="email" formControlName="email" autocomplete="username" />
-          </label>
-          <label>
-            Contraseña
-            <input type="password" formControlName="clave" autocomplete="current-password" />
-          </label>
-          @if (error()) {
-            <p class="error" role="alert">{{ error() }}</p>
+        @switch (paso()) {
+          @case ('codigo-correo') {
+            <app-paso-codigo-correo
+              [email]="email()"
+              (segundoFactor)="irA($event)"
+              (usarClave)="irA('clave')"
+              (volver)="irA('correo')"
+            />
           }
-          <button type="submit" [disabled]="formulario.invalid || enviando()">Ingresar</button>
-        </form>
+          @case ('clave') {
+            <app-paso-clave
+              [emailInicial]="email()"
+              (segundoFactor)="irA($event)"
+              (volver)="irA('correo', $event)"
+            />
+          }
+          @case ('codigo-mfa') {
+            <app-paso-codigo-mfa (volver)="irA('correo')" />
+          }
+          @case ('configurar-mfa') {
+            <app-paso-configurar-mfa (volver)="irA('correo')" />
+          }
+          @default {
+            <app-paso-correo
+              [emailInicial]="email()"
+              (codigoEnviado)="irA('codigo-correo', $event)"
+              (usarClave)="irA('clave', $event)"
+            />
+          }
+        }
       }
     }
   }

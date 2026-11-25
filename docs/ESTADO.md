@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 + pantallas de MFA en `main`; ingreso con código por correo (ADR-0006) en PR #15; siguen pantalla "Tu correo → Continuar", invitaciones, passkeys y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 + pantallas de MFA en `main`; ingreso con código por correo (ADR-0006) en `main`; pantalla "Tu correo → Continuar" en PR #16; siguen invitaciones, passkeys y 0.7
 
 ---
 
@@ -67,7 +67,10 @@
   minuto y 5 por hora por usuario; siempre 202). Módulo nuevo `notificaciones` (`Correos`, SMTP asíncrono con hilos
   virtuales). `FinalizadorDeIngreso.trasPrimerFactor` unifica contraseña y código. Tests: `CodigoPorCorreoIT`
   (14 casos), `CorreosSmtpIT` (Mailpit real).
-  - Pendiente: pantalla "Tu correo → Continuar" en Angular; captcha en formularios públicos; outbox para correos críticos.
+  - Pendiente: captcha en formularios públicos; outbox para correos críticos.
+- [x] **Pantalla de ingreso por correo — PR #16:** la primera pantalla pide solo el correo (`PasoCorreo`), después el
+  código (`PasoCodigoCorreo`, reenvío con cuenta regresiva de 60 s) o la contraseña (`PasoClave`, con botón para
+  mostrarla). `App` solo orquesta los pasos. `SesionService.primerFactor` unifica contraseña y código. 24 tests.
   - Entorno de Claude: sin JDK 25 ni Maven Central; la CI corre al **abrir el PR**, no con el push.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
