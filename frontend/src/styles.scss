@@ -1,1 +1,75 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Estilos globales: los elementos base que comparten todas las pantallas (tarjeta, formulario, botones).
+ * Los estilos de cada componente quedan en su propio .scss (encapsulados por Angular).
+ */
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.tarjeta h2,
+.tarjeta p {
+  margin: 0;
+}
+
+.secundario {
+  color: #5b6170;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+input {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #c9ccd3;
+  border-radius: 0.5rem;
+  font: inherit;
+}
+
+button {
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #1f5eff;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Acción secundaria ("Volver", "Usar un código de recuperación"): parece un enlace. */
+button.secundaria {
+  padding: 0.25rem 0;
+  background: none;
+  color: #1f5eff;
+  font-weight: 500;
+  text-align: left;
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+}
+
+/* Textos que se copian a mano (claves, códigos): letra de ancho fijo y separación clara. */
+.monoespaciado {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  letter-spacing: 0.05em;
+}

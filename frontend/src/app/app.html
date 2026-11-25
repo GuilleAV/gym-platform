@@ -15,7 +15,12 @@
         }
       </header>
 
-      @if (sesion.usuario(); as usuario) {
+      @if (sesion.codigosRecuperacion(); as codigos) {
+        <app-codigos-recuperacion
+          [codigos]="codigos"
+          (listo)="sesion.descartarCodigosRecuperacion(); volverAClave()"
+        />
+      } @else if (sesion.usuario(); as usuario) {
         <section class="tarjeta">
           <p>
             Hola, <strong>{{ usuario.nombre }}</strong>
@@ -23,6 +28,10 @@
           <p class="secundario">{{ usuario.email }}</p>
           <button type="button" (click)="salir()">Cerrar sesión</button>
         </section>
+      } @else if (paso() === 'codigo-mfa') {
+        <app-paso-codigo-mfa (volver)="volverAClave()" />
+      } @else if (paso() === 'configurar-mfa') {
+        <app-paso-configurar-mfa (volver)="volverAClave()" />
       } @else {
         <form class="tarjeta" [formGroup]="formulario" (ngSubmit)="ingresar()">
           <h2>Iniciar sesión</h2>

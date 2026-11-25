@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 1 en `main`; 0.6b parte 2 (roles + MFA) en PR #13 (CI ✅); siguen pantallas de MFA en Angular, 0.6b parte 3 (invitaciones) y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 en `main`; pantallas de MFA en Angular en PR #14; siguen 0.6b parte 3 (invitaciones) y 0.7
 
 ---
 
@@ -57,6 +57,10 @@
   Security 7 no trae TOTP), ingreso en dos pasos (`/api/sesion/mfa/*`), 10 códigos de recuperación (Argon2id),
   secreto cifrado vía `CifradoDeDatos`. `MfaIT` 16 casos.
   - Pendiente: pantallas de Angular para el MFA (QR, código, códigos de recuperación). Los usuarios de demo no tienen roles.
+- [x] **Pantallas de MFA en Angular — PR #14:** `PasoCodigoMfa` (código de la app o de recuperación),
+  `PasoConfigurarMfa` (QR + clave manual en grupos de 4) y `CodigosRecuperacion` (copiar, descargar .txt, no se
+  sigue sin confirmar que se guardaron). QR con `qrcode` 1.5.4 cargado en diferido (chunk aparte de ~8 kB) detrás
+  del token `GENERADOR_QR` (reemplazable en tests). Estilos base movidos a `styles.scss`. 16 tests de Angular.
   - Entorno de Claude: sin JDK 25 ni Maven Central; la CI corre al **abrir el PR**, no con el push.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
