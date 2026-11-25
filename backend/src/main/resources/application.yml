@@ -73,6 +73,10 @@ gym:
     password: ${GP_APROVISIONADOR_DB_PASSWORD:}
     # gimnasios: se listan en application-demo.yml (perfil "demo").
 
+  # --- Correo saliente (ADR-0006 §5) ---------------------------------------------------
+  correo:
+    remitente: ${GYM_CORREO_REMITENTE:no-responder@gym-platform.local}
+
   # --- Seguridad del inicio de sesión (paso 0.6b) ---------------------------------------
   seguridad:
     ingreso:
@@ -83,6 +87,11 @@ gym:
       ventana: PT1H              # una hora sin fallos y el contador vuelve a cero
     sesion:
       vencimiento-absoluto: PT12H   # aunque se use sin parar, la sesión dura como máximo 12 h
+    codigo-correo:               # ingreso con código por correo (ADR-0006 §3)
+      vigencia: PT10M            # el código vale 10 minutos
+      intentos-por-codigo: 5     # después hay que pedir otro
+      espera-entre-envios: PT60S # no se manda otro antes de 1 minuto
+      envios-por-hora: 5         # tope por usuario: evita llenarle la casilla a alguien
 
   monitoreo:
     disco:

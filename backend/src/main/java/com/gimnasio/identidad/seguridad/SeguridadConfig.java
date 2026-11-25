@@ -61,6 +61,9 @@ class SeguridadConfig {
                         // Segundo paso del ingreso: públicos, pero exigen el "ingreso pendiente" de la sesión.
                         .requestMatchers(HttpMethod.POST, "/api/sesion/mfa/verificar", "/api/sesion/mfa/configurar",
                                 "/api/sesion/mfa/confirmar").permitAll()
+                        // Ingreso con código por correo (ADR-0006).
+                        .requestMatchers(HttpMethod.POST, "/api/sesion/codigo/solicitar", "/api/sesion/codigo/ingresar")
+                                .permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
                 .csrf(csrf -> {
