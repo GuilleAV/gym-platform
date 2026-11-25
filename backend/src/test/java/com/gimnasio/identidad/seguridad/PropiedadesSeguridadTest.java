@@ -28,4 +28,12 @@ class PropiedadesSeguridadTest {
     void faltaElVencimientoAbsoluto() {
         assertThatThrownBy(() -> new PropiedadesSeguridad.Sesion(null)).isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    void elCodigoPorCorreoNecesitaIntentosYEnviosPositivos() {
+        assertThatThrownBy(() -> new PropiedadesSeguridad.CodigoCorreo(Duration.ofMinutes(10), 0, Duration.ofSeconds(60), 5))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new PropiedadesSeguridad.CodigoCorreo(null, 5, Duration.ofSeconds(60), 5))
+                .isInstanceOf(NullPointerException.class);
+    }
 }

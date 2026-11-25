@@ -12,11 +12,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * (por ejemplo, si un gimnasio grande comparte una sola IP pública y el límite por IP le queda corto).</p>
  */
 @ConfigurationProperties("gym.seguridad")
-public record PropiedadesSeguridad(Ingreso ingreso, Sesion sesion) {
+public record PropiedadesSeguridad(Ingreso ingreso, Sesion sesion, CodigoCorreo codigoCorreo) {
 
     public PropiedadesSeguridad {
         Objects.requireNonNull(ingreso, "falta gym.seguridad.ingreso");
         Objects.requireNonNull(sesion, "falta gym.seguridad.sesion");
+        Objects.requireNonNull(codigoCorreo, "falta gym.seguridad.codigo-correo");
     }
 
     /**
@@ -49,6 +50,25 @@ public record PropiedadesSeguridad(Ingreso ingreso, Sesion sesion) {
 
         public Sesion {
             Objects.requireNonNull(vencimientoAbsoluto, "falta vencimiento-absoluto");
+        }
+    }
+
+    /**
+     * Ingreso con código por correo (ADR-0006 §3).
+     *
+     * @param vigencia          cuánto vale un código desde que se envía
+     * @param intentosPorCodigo intentos fallidos con un mismo código antes de anularlo
+     * @param esperaEntreEnvios tiempo mínimo entre dos envíos al mismo usuario
+     * @param enviosPorHora     tope de envíos por usuario en una hora
+     */
+    public record CodigoCorreo(Duration vigencia, int intentosPorCodigo, Duration esperaEntreEnvios, int enviosPorHora) {
+
+        public CodigoCorreo {
+            Objects.requireNonNull(vigencia, "falta vigencia");
+            Objects.requireNonNull(esperaEntreEnvios, "falta espera-entre-envios");
+            if (intentosPorCodigo < 1 || enviosPorHora < 1) {
+                throw new IllegalArgumentException("intentos-por-codigo y envios-por-hora deben ser 1 o más");
+            }
         }
     }
 }

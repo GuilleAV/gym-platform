@@ -1,6 +1,5 @@
 package com.gimnasio.identidad.web;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -20,8 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gimnasio.identidad.Contrasenias;
 import com.gimnasio.identidad.ServicioUsuarios;
-import com.gimnasio.identidad.mfa.RequisitoMfa;
-import com.gimnasio.identidad.mfa.ServicioMfa;
 import com.gimnasio.identidad.seguridad.LimitadorDeIntentos;
 import com.gimnasio.plataforma.ContextoGimnasio;
 
@@ -46,18 +43,14 @@ class SesionController {
     private final AuthenticationManager autenticacion;
     private final FinalizadorDeIngreso finalizador;
     private final ServicioUsuarios usuarios;
-    private final ServicioMfa mfa;
     private final LimitadorDeIntentos limitador;
-    private final Clock reloj;
 
     SesionController(AuthenticationManager autenticacion, FinalizadorDeIngreso finalizador, ServicioUsuarios usuarios,
-            ServicioMfa mfa, LimitadorDeIntentos limitador, Clock reloj) {
+            LimitadorDeIntentos limitador) {
         this.autenticacion = autenticacion;
         this.finalizador = finalizador;
         this.usuarios = usuarios;
-        this.mfa = mfa;
         this.limitador = limitador;
-        this.reloj = reloj;
     }
 
     record Credenciales(String email, String clave) {
@@ -109,15 +102,7 @@ class SesionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(CREDENCIALES_INVALIDAS);
         }
         limitador.registrarExito(email);
-
-        RequisitoMfa requisito = mfa.requisitoPara(email);
-        if (requisito == RequisitoMfa.NO_REQUERIDO) {
-            finalizador.finalizar(autenticado, request, response);
-            return ResponseEntity.noContent().build();
-        }
-        // Falta el segundo factor: la sesión solo recuerda "pasó la contraseña" (5 min), sin autenticar.
-        IngresoPendiente.guardar(request, email, requisito, reloj.millis());
-        return ResponseEntity.ok(Map.of("paso", requisito == RequisitoMfa.CODIGO ? "CODIGO_MFA" : "CONFIGURAR_MFA"));
+        return finalizador.trasPrimerFactor(email, autenticado, request, response);
     }
 
     /** 429 + Retry-After en segundos (redondeado hacia arriba: nunca decir "ya podés" antes de tiempo). */

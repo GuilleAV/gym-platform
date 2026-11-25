@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 en `main`; pantallas de MFA en Angular en PR #14; siguen 0.6b parte 3 (invitaciones) y 0.7
+**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 + pantallas de MFA en `main`; ingreso con código por correo (ADR-0006) en PR #15; siguen pantalla "Tu correo → Continuar", invitaciones, passkeys y 0.7
 
 ---
 
@@ -61,6 +61,13 @@
   `PasoConfigurarMfa` (QR + clave manual en grupos de 4) y `CodigosRecuperacion` (copiar, descargar .txt, no se
   sigue sin confirmar que se guardaron). QR con `qrcode` 1.5.4 cargado en diferido (chunk aparte de ~8 kB) detrás
   del token `GENERADOR_QR` (reemplazable en tests). Estilos base movidos a `styles.scss`. 16 tests de Angular.
+- [x] **ADR-0006 + ingreso con código por correo (backend) — PR #15:** decisión del dueño: lo más simple para los
+  usuarios. Código por correo como base, passkey como mejora (siguiente), contraseña opcional; el código por correo
+  es un solo factor (roles con MFA piden además la app). V5 `codigo_ingreso` (SHA-256, 10 min, 5 intentos, 1 por
+  minuto y 5 por hora por usuario; siempre 202). Módulo nuevo `notificaciones` (`Correos`, SMTP asíncrono con hilos
+  virtuales). `FinalizadorDeIngreso.trasPrimerFactor` unifica contraseña y código. Tests: `CodigoPorCorreoIT`
+  (14 casos), `CorreosSmtpIT` (Mailpit real).
+  - Pendiente: pantalla "Tu correo → Continuar" en Angular; captcha en formularios públicos; outbox para correos críticos.
   - Entorno de Claude: sin JDK 25 ni Maven Central; la CI corre al **abrir el PR**, no con el push.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
