@@ -1,6 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CodigosRecuperacion } from './sesion/codigos-recuperacion';
+import { PasoCodigoMfa } from './sesion/paso-codigo-mfa';
+import { PasoConfigurarMfa } from './sesion/paso-configurar-mfa';
 import { SesionService } from './sesion/sesion.service';
+import { textoDeEspera } from './sesion/texto-de-espera';
+
+export { textoDeEspera } from './sesion/texto-de-espera';
+
+/** En qué paso del ingreso está el usuario. */
+type PasoIngreso = 'clave' | 'codigo-mfa' | 'configurar-mfa';
 
 /**
  * Pantalla inicial del gimnasio: nombre, bienvenida e inicio de sesión.
@@ -8,7 +17,7 @@ import { SesionService } from './sesion/sesion.service';
  */
 @Component({
   selector: 'app-root',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PasoCodigoMfa, PasoConfigurarMfa, CodigosRecuperacion],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -16,6 +25,7 @@ export class App implements OnInit {
   protected readonly sesion = inject(SesionService);
   protected readonly error = signal('');
   protected readonly enviando = signal(false);
+  protected readonly paso = signal<PasoIngreso>('clave');
 
   protected readonly formulario = new FormGroup({
     email: new FormControl('', {
@@ -42,6 +52,13 @@ export class App implements OnInit {
         case 'ok':
           this.formulario.reset();
           break;
+        case 'codigo-mfa':
+        case 'configurar-mfa':
+          // La contraseña es correcta pero el rol exige MFA: se borra la clave del formulario y se
+          // pasa al segundo paso. La sesión todavía no está autenticada.
+          this.formulario.controls.clave.reset();
+          this.paso.set(resultado.tipo);
+          break;
         case 'invalido':
           this.error.set('Correo o contraseña incorrectos');
           break;
@@ -58,16 +75,12 @@ export class App implements OnInit {
     }
   }
 
+  protected volverAClave(): void {
+    this.paso.set('clave');
+  }
+
   protected async salir(): Promise<void> {
     await this.sesion.salir();
+    this.paso.set('clave');
   }
-}
-
-/** 45 → "45 segundos"; 60 → "1 minuto"; 125 → "3 minutos" (siempre redondea hacia arriba). */
-export function textoDeEspera(segundos: number): string {
-  if (segundos < 60) {
-    return segundos === 1 ? '1 segundo' : `${segundos} segundos`;
-  }
-  const minutos = Math.ceil(segundos / 60);
-  return minutos === 1 ? '1 minuto' : `${minutos} minutos`;
 }

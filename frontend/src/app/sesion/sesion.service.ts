@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
@@ -20,12 +20,27 @@ export type EstadoCarga = 'cargando' | 'listo' | 'gimnasio-desconocido';
 
 /**
  * Resultado de un intento de ingreso. Un "union type": TypeScript obliga a quien lo usa a contemplar
- * los tres casos, y solo el caso 'bloqueado' trae los segundos de espera.
+ * todos los casos, y solo el caso 'bloqueado' trae los segundos de espera.
+ *
+ * 'codigo-mfa' y 'configurar-mfa': la contraseña es correcta pero algún rol del usuario exige MFA
+ * (ADR-0005). Todavía NO hay sesión autenticada: falta el segundo paso.
  */
 export type ResultadoIngreso =
   | { tipo: 'ok' }
   | { tipo: 'invalido' }
-  | { tipo: 'bloqueado'; segundos: number };
+  | { tipo: 'bloqueado'; segundos: number }
+  | { tipo: 'codigo-mfa' }
+  | { tipo: 'configurar-mfa' };
+
+/** Resultado de enviar un código de MFA (de la app o de recuperación). */
+export type ResultadoMfa =
+  { tipo: 'ok' } | { tipo: 'invalido' } | { tipo: 'bloqueado'; segundos: number };
+
+/** Datos para configurar la app de códigos: el QR se dibuja a partir de `uri`. */
+export interface ConfiguracionMfa {
+  secreto: string;
+  uri: string;
+}
 
 /**
  * Estado de la sesión del usuario en el gimnasio del dominio.
@@ -46,6 +61,11 @@ export class SesionService {
   readonly bienvenida = signal('');
   readonly usuario = signal<Usuario | null>(null);
   readonly conectado = computed(() => this.usuario() !== null);
+  /**
+   * Códigos de recuperación recién generados. Se guardan ANTES de cargar al usuario para que la
+   * pantalla los muestre primero (si no, se vería un instante la bienvenida). Solo viven en memoria.
+   */
+  readonly codigosRecuperacion = signal<string[] | null>(null);
 
   /** Carga el gimnasio del dominio, el token CSRF y, si hay sesión, el usuario. */
   async iniciar(): Promise<void> {
@@ -76,8 +96,16 @@ export class SesionService {
    * 'bloqueado' si hubo demasiados intentos fallidos (429), con los segundos que indica Retry-After.
    */
   async ingresar(email: string, clave: string): Promise<ResultadoIngreso> {
+    let respuesta: HttpResponse<{ paso?: string } | null>;
     try {
-      await firstValueFrom(this.http.post<void>('/api/sesion/ingresar', { email, clave }));
+      // observe: 'response' para ver el código HTTP: 204 = adentro; 200 = falta el segundo factor.
+      respuesta = await firstValueFrom(
+        this.http.post<{ paso?: string } | null>(
+          '/api/sesion/ingresar',
+          { email, clave },
+          { observe: 'response' },
+        ),
+      );
     } catch (error) {
       if (esEstado(error, 401) || esEstado(error, 400)) {
         return { tipo: 'invalido' };
@@ -87,14 +115,93 @@ export class SesionService {
       }
       throw error;
     }
-    await this.refrescarCsrf(); // al ingresar, el backend cambia el token CSRF
-    await this.cargarUsuario();
+    const paso = respuesta.body?.paso;
+    if (paso === 'CODIGO_MFA') {
+      return { tipo: 'codigo-mfa' };
+    }
+    if (paso === 'CONFIGURAR_MFA') {
+      return { tipo: 'configurar-mfa' };
+    }
+    await this.alCompletarIngreso();
     return { tipo: 'ok' };
+  }
+
+  /** Segundo paso: código de 6 dígitos de la app, o un código de recuperación. */
+  async verificarMfa(codigo: string): Promise<ResultadoMfa> {
+    const error = await this.postMfa('/api/sesion/mfa/verificar', { codigo });
+    if (error) {
+      return error;
+    }
+    await this.alCompletarIngreso();
+    return { tipo: 'ok' };
+  }
+
+  /** Primera vez: pide un secreto nuevo para dibujar el QR. null si el ingreso pendiente venció. */
+  async iniciarConfiguracionMfa(): Promise<ConfiguracionMfa | null> {
+    try {
+      return await firstValueFrom(
+        this.http.post<ConfiguracionMfa>('/api/sesion/mfa/configurar', {}),
+      );
+    } catch (error) {
+      if (esEstado(error, 401)) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Confirma la configuración con el primer código. Si es correcto deja los códigos de recuperación
+   * en {@link codigosRecuperacion}: es la ÚNICA vez que el servidor los muestra.
+   */
+  async confirmarMfa(codigo: string): Promise<ResultadoMfa> {
+    try {
+      const respuesta = await firstValueFrom(
+        this.http.post<{ codigosRecuperacion: string[] }>('/api/sesion/mfa/confirmar', { codigo }),
+      );
+      this.codigosRecuperacion.set(respuesta.codigosRecuperacion);
+      await this.alCompletarIngreso();
+      return { tipo: 'ok' };
+    } catch (error) {
+      const conocido = errorDeMfa(error);
+      if (conocido) {
+        return conocido;
+      }
+      throw error;
+    }
+  }
+
+  /** Al quedar autenticado el backend cambia el token CSRF: hay que pedir el nuevo antes del próximo POST. */
+  private async alCompletarIngreso(): Promise<void> {
+    await this.refrescarCsrf();
+    await this.cargarUsuario();
+  }
+
+  private async postMfa(
+    url: string,
+    cuerpo: object,
+  ): Promise<Exclude<ResultadoMfa, { tipo: 'ok' }> | null> {
+    try {
+      await firstValueFrom(this.http.post<void>(url, cuerpo));
+      return null;
+    } catch (error) {
+      const conocido = errorDeMfa(error);
+      if (conocido) {
+        return conocido;
+      }
+      throw error;
+    }
+  }
+
+  /** El usuario confirmó que guardó los códigos: se borran de la memoria. */
+  descartarCodigosRecuperacion(): void {
+    this.codigosRecuperacion.set(null);
   }
 
   async salir(): Promise<void> {
     await firstValueFrom(this.http.post<void>('/api/sesion/salir', {}));
     this.usuario.set(null);
+    this.codigosRecuperacion.set(null);
     await this.refrescarCsrf(); // al salir también se descarta el token anterior
   }
 
@@ -114,6 +221,17 @@ export class SesionService {
       throw error;
     }
   }
+}
+
+/** 401/400 → código inválido (o venció el paso); 429 → bloqueado. Cualquier otro error, desconocido. */
+function errorDeMfa(error: unknown): Exclude<ResultadoMfa, { tipo: 'ok' }> | null {
+  if (esEstado(error, 401) || esEstado(error, 400)) {
+    return { tipo: 'invalido' };
+  }
+  if (error instanceof HttpErrorResponse && error.status === 429) {
+    return { tipo: 'bloqueado', segundos: segundosDeEspera(error) };
+  }
+  return null;
 }
 
 /** Lee Retry-After (segundos). Si falta o no es un número, asume 60: mejor esperar de más que de menos. */
