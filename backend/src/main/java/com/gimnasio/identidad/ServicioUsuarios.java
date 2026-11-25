@@ -85,6 +85,25 @@ public class ServicioUsuarios {
                 .stream().findFirst();
     }
 
+    /**
+     * Pasa una cuenta INVITADA (o EN_REVISION) al estado indicado: ACTIVO o EN_REVISION (ADR-0007).
+     * Nunca toca cuentas ya activas o suspendidas: activar a alguien suspendido es otra decisión.
+     *
+     * @return false si no había una cuenta en un estado que se pueda cambiar
+     */
+    public boolean avanzarInscripcion(long usuarioId, String nuevoEstado) {
+        if (!"ACTIVO".equals(nuevoEstado) && !"EN_REVISION".equals(nuevoEstado)) {
+            throw new IllegalArgumentException("Estado no permitido: " + nuevoEstado);
+        }
+        return base.jdbc().update("UPDATE usuario SET estado = ? WHERE id = ? AND estado IN ('INVITADO', 'EN_REVISION')",
+                nuevoEstado, usuarioId) == 1;
+    }
+
+    /** Correo del usuario (para asignarle roles por correo). */
+    public Optional<String> emailDe(long usuarioId) {
+        return base.jdbc().queryForList("SELECT email FROM usuario WHERE id = ?", String.class, usuarioId).stream().findFirst();
+    }
+
     public Optional<String> nombreDe(String email) {
         return base.jdbc().queryForList("SELECT nombre FROM usuario WHERE email = ?", String.class, normalizarEmail(email))
                 .stream().findFirst();

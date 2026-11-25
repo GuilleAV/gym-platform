@@ -14,14 +14,22 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gimnasio.auditoria.Auditoria;
+import com.gimnasio.identidad.ServicioUsuarios;
 import com.gimnasio.inscripcion.CorreoYaRegistrado;
+import com.gimnasio.inscripcion.DatosFicha;
 import com.gimnasio.inscripcion.DatosMostrador;
+import com.gimnasio.inscripcion.DocumentoAceptado;
+import com.gimnasio.inscripcion.FichaNoEditable;
 import com.gimnasio.inscripcion.InscripcionCargada;
+import com.gimnasio.inscripcion.ResultadoEnvio;
 import com.gimnasio.inscripcion.ResumenInscripcion;
+import com.gimnasio.inscripcion.ServicioFicha;
 import com.gimnasio.inscripcion.ServicioInscripcion;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,9 +50,13 @@ class InscripcionController {
     private static final Set<String> ESTADOS = Set.of("PENDIENTE", "FICHA_PENDIENTE", "EN_REVISION", "APROBADA", "RECHAZADA");
 
     private final ServicioInscripcion servicio;
+    private final ServicioFicha fichas;
+    private final ServicioUsuarios usuarios;
 
-    InscripcionController(ServicioInscripcion servicio) {
+    InscripcionController(ServicioInscripcion servicio, ServicioFicha fichas, ServicioUsuarios usuarios) {
         this.servicio = servicio;
+        this.fichas = fichas;
+        this.usuarios = usuarios;
     }
 
     record Pedido(String nombre, String apellido, String email, String celular, LocalDate fechaNacimiento) {
@@ -83,6 +95,48 @@ class InscripcionController {
             case NO_CORRESPONDE -> conflicto("La ficha ya no está pendiente");
             case MUY_PRONTO -> conflicto("Esperá un minuto antes de volver a enviarla");
         };
+    }
+
+    // ----------------------------------------------- ficha completada en el mostrador
+
+    record EnvioMostrador(DatosFicha datos, List<DocumentoAceptado> documentos) {
+    }
+
+    @GetMapping("/api/inscripciones/{id}/ficha")
+    ResponseEntity<?> leerFicha(@PathVariable long id) {
+        return ResponseEntity.of(fichas.leer(id));
+    }
+
+    @PutMapping("/api/inscripciones/{id}/ficha")
+    ResponseEntity<?> guardarFicha(@PathVariable long id, @RequestBody(required = false) DatosFicha datos) {
+        DatosFicha recibidos = datos == null ? DatosFicha.vacia() : datos;
+        List<String> errores = recibidos.erroresDeFormato();
+        if (!errores.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("errores", errores));
+        }
+        fichas.guardarBorrador(id, recibidos);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * La recepción completa la ficha (típicamente de quien no tiene correo). Registra que los documentos se
+     * aceptaron EN EL MOSTRADOR y quién del personal lo registró.
+     */
+    @PostMapping("/api/inscripciones/{id}/ficha/enviar")
+    ResponseEntity<?> enviarFicha(@PathVariable long id, @RequestBody(required = false) EnvioMostrador envio, Principal quien) {
+        EnvioMostrador e = envio == null ? new EnvioMostrador(DatosFicha.vacia(), List.of()) : envio;
+        Long actorId = usuarios.idDe(quien.getName()).orElse(null);
+        ResultadoEnvio resultado = fichas.enviar(id, e.datos() == null ? DatosFicha.vacia() : e.datos(), e.documentos(),
+                ServicioFicha.Medio.MOSTRADOR, actorId == null ? "desconocido" : Auditoria.usuario(actorId), actorId, null);
+        if (!resultado.enviada()) {
+            return ResponseEntity.badRequest().body(Map.of("errores", resultado.errores()));
+        }
+        return ResponseEntity.ok(Map.of("estado", resultado.estado()));
+    }
+
+    @ExceptionHandler(FichaNoEditable.class)
+    ResponseEntity<?> fichaNoEditable(FichaNoEditable e) {
+        return conflicto(e.getMessage());
     }
 
     @ExceptionHandler(CorreoYaRegistrado.class)

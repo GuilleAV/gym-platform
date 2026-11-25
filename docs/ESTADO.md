@@ -2,7 +2,7 @@
 
 > **Leer esto primero al empezar cada conversación nueva.** Se actualiza al cerrar cada sesión de trabajo.
 
-**Última actualización:** 23/11/2026 · **Fase actual:** Fase 0 — 0.2 a 0.6b parte 2 + pantallas de MFA en `main`; ingreso con código por correo (ADR-0006) en `main`; pantalla "Tu correo → Continuar" en PR #16; siguen invitaciones, passkeys y 0.7
+**Última actualización:** 24/11/2026 · **Fase actual:** Fase 0 — identidad completa en `main` (login por código, MFA por rol, pantallas); inscripción: mostrador en `main`, ficha en PR #18; siguen pantallas de inscripción, passkeys y 0.7
 
 ---
 
@@ -72,6 +72,19 @@
   código (`PasoCodigoCorreo`, reenvío con cuenta regresiva de 60 s) o la contraseña (`PasoClave`, con botón para
   mostrarla). `App` solo orquesta los pasos. `SesionService.primerFactor` unifica contraseña y código. 24 tests.
   - Entorno de Claude: sin JDK 25 ni Maven Central; la CI corre al **abrir el PR**, no con el push.
+- [x] **ADR-0007 + inscripción en el mostrador (backend) — PR #17:** decisiones del dueño: aprobación configurable
+  por gimnasio (`SIMPLE` por defecto / `COMPLETO`), mostrador primero, solo ADMINISTRADOR y RECEPCION, invitación de
+  7 días, correo opcional (sin correo: inscripto sin cuenta, PIN del kiosco a futuro), menores con responsable.
+  V6: `alumno` (ficha, separada de `usuario`), `inscripcion`, `invitacion` (SHA-256, token en el fragmento `#t=`),
+  `configuracion_gimnasio`, `auditoria`; la contraseña deja de ser obligatoria. Primera autorización por rol
+  (roles → `ROLE_<codigo>`). `BaseDelGimnasio.enTransaccion`. Módulos `inscripcion` y `auditoria`. `InscripcionMostradorIT` (17).
+- [x] **Completar la ficha — PR #18:** por invitación (`/api/invitacion/abrir` → sesión de ficha sin autenticar, 2 h;
+  borrador; enviar) y en el mostrador (`/api/inscripciones/{id}/ficha`). V7: datos del responsable para menores y
+  documentos legales **versionados** (`documento_legal`, `aceptacion_documento` con medio, quién aceptó y quién
+  registró; textos de ejemplo ⚖️). Al enviar: modo SIMPLE → alumno y cuenta ACTIVOS con rol ALUMNO; COMPLETO →
+  EN_REVISION. `FichaIT`, `DatosFichaTest`.
+  - Pendiente: pantallas de Angular (recepción y ficha), bandeja de aprobación del modo COMPLETO, formulario
+    público con captcha, apto físico y salud (configurables por gimnasio), quitar UPDATE/DELETE sobre `auditoria`.
 - [x] **Mergeados en `main` (23/11/2026):** PRs #1 (0.2), #2 (0.3), #3 (0.4), #4 (0.5).
 - [ ] **Dependabot:** #5 acciones (CI ✅), #6 Spring Boot 4.2 + Modulith 2.2 + Maven 3.10 (CI ✅, requiere
   actualizar ADR-0001), #7 TypeScript 7 (CI ❌: Angular 22 no lo soporta → cerrar e ignorar mayores de TS).

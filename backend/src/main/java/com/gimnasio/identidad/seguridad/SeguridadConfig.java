@@ -64,6 +64,10 @@ class SeguridadConfig {
                         // Ingreso con código por correo (ADR-0006).
                         .requestMatchers(HttpMethod.POST, "/api/sesion/codigo/solicitar", "/api/sesion/codigo/ingresar")
                                 .permitAll()
+                        // Completar la ficha con la invitación: públicos, pero exigen la "sesión de ficha" (ADR-0007).
+                        .requestMatchers(HttpMethod.POST, "/api/invitacion/abrir", "/api/ficha/enviar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ficha").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/ficha").permitAll()
                         // Inscripción en el mostrador (ADR-0007 §3): solo personal autorizado.
                         .requestMatchers("/api/inscripciones", "/api/inscripciones/**").hasAnyRole("ADMINISTRADOR", "RECEPCION")
                         .requestMatchers("/error").permitAll()
