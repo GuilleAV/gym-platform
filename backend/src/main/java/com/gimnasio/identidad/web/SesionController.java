@@ -1,6 +1,7 @@
 package com.gimnasio.identidad.web;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -113,12 +115,20 @@ class SesionController {
                 .body(DEMASIADOS_INTENTOS);
     }
 
-    /** {@code GET /api/sesion/yo}: quién está conectado (requiere sesión). */
+    /**
+     * {@code GET /api/sesion/yo}: quién está conectado (requiere sesión) y sus roles.
+     *
+     * <p>Los roles le sirven a Angular para mostrar u ocultar menús. <b>No son seguridad:</b> quien los
+     * cambie en el navegador ve un botón de más, pero el backend le responde 403 igual (SEG-02).</p>
+     */
     @GetMapping("/api/sesion/yo")
-    Map<String, String> yo(Authentication autenticado) {
+    Map<String, Object> yo(Authentication autenticado) {
+        List<String> roles = autenticado.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+                .filter(a -> a.startsWith("ROLE_")).map(a -> a.substring("ROLE_".length())).sorted().toList();
         return Map.of(
                 "email", autenticado.getName(),
                 "nombre", usuarios.nombreDe(autenticado.getName()).orElse(""),
-                "gimnasio", ContextoGimnasio.actual().slug());
+                "gimnasio", ContextoGimnasio.actual().slug(),
+                "roles", roles);
     }
 }

@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { routes } from './app.routes';
 import { App, textoDeEspera } from './app';
 import { GENERADOR_QR } from './sesion/generador-qr';
 import { agruparDeACuatro } from './sesion/paso-configurar-mfa';
@@ -18,6 +20,7 @@ describe('App (pantalla del gimnasio)', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter(routes),
         // jsdom no tiene canvas: el QR se reemplaza por una imagen falsa (por eso existe el token).
         { provide: GENERADOR_QR, useValue: async () => 'data:image/png;base64,QR-FALSO' },
       ],
@@ -25,6 +28,7 @@ describe('App (pantalla del gimnasio)', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(App);
     fixture.detectChanges(); // dispara ngOnInit → sesion.iniciar()
+    await TestBed.inject(Router).navigateByUrl('/'); // la página de inicio va en el <router-outlet>
   });
 
   afterEach(() => http.verify()); // ninguna petición quedó sin responder ni hubo peticiones de más
@@ -74,6 +78,26 @@ describe('App (pantalla del gimnasio)', () => {
 
     expect(texto()).toContain('Ana');
     expect(elemento('form')).toBeNull();
+  });
+
+  it('el personal ve el acceso a recepción', async () => {
+    await arrancar({
+      email: 'r@correo.com',
+      nombre: 'Rita',
+      gimnasio: 'gym-norte',
+      roles: ['RECEPCION'],
+    });
+    expect(texto()).toContain('Ir a recepción');
+  });
+
+  it('un alumno no ve el acceso a recepción', async () => {
+    await arrancar({
+      email: 'a@correo.com',
+      nombre: 'Ana',
+      gimnasio: 'gym-norte',
+      roles: ['ALUMNO'],
+    });
+    expect(texto()).not.toContain('Ir a recepción');
   });
 
   it('con credenciales inválidas muestra un mensaje genérico', async () => {

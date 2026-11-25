@@ -14,53 +14,7 @@
           <p class="bienvenida">{{ sesion.bienvenida() }}</p>
         }
       </header>
-
-      <!-- Orden importante: los códigos de recuperación se muestran UNA vez, antes que nada. -->
-      @if (sesion.codigosRecuperacion(); as codigos) {
-        <app-codigos-recuperacion
-          [codigos]="codigos"
-          (listo)="sesion.descartarCodigosRecuperacion(); irA('correo')"
-        />
-      } @else if (sesion.usuario(); as usuario) {
-        <section class="tarjeta">
-          <p>
-            Hola, <strong>{{ usuario.nombre }}</strong>
-          </p>
-          <p class="secundario">{{ usuario.email }}</p>
-          <button type="button" (click)="salir()">Cerrar sesión</button>
-        </section>
-      } @else {
-        @switch (paso()) {
-          @case ('codigo-correo') {
-            <app-paso-codigo-correo
-              [email]="email()"
-              (segundoFactor)="irA($event)"
-              (usarClave)="irA('clave')"
-              (volver)="irA('correo')"
-            />
-          }
-          @case ('clave') {
-            <app-paso-clave
-              [emailInicial]="email()"
-              (segundoFactor)="irA($event)"
-              (volver)="irA('correo', $event)"
-            />
-          }
-          @case ('codigo-mfa') {
-            <app-paso-codigo-mfa (volver)="irA('correo')" />
-          }
-          @case ('configurar-mfa') {
-            <app-paso-configurar-mfa (volver)="irA('correo')" />
-          }
-          @default {
-            <app-paso-correo
-              [emailInicial]="email()"
-              (codigoEnviado)="irA('codigo-correo', $event)"
-              (usarClave)="irA('clave', $event)"
-            />
-          }
-        }
-      }
+      <router-outlet />
     }
   }
 </main>

@@ -77,7 +77,8 @@ class SesionIT extends MysqlPlataformaContenedor {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("ana@correo.com"))
                 .andExpect(jsonPath("$.nombre").value("Ana"))
-                .andExpect(jsonPath("$.gimnasio").value("ses-norte"));
+                .andExpect(jsonPath("$.gimnasio").value("ses-norte"))
+                .andExpect(jsonPath("$.roles").isEmpty()); // ana no tiene roles
 
         Cookie csrf = cookieCsrf(NORTE);
         mvc.perform(post("http://" + NORTE + "/api/sesion/salir").cookie(sesion, csrf).header("X-XSRF-TOKEN", csrf.getValue()))
