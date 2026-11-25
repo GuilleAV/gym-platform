@@ -12,3 +12,4 @@ Formato: `NNNN-titulo-corto.md` (copiar `0000-plantilla.md`). Un ADR aceptado no
 | 0004 | Almacenamiento y procesamiento de multimedia (disco del servidor) | Aceptado |
 | 0005 | Roles como datos y MFA definido por rol | Aceptado |
 | 0006 | Formas de ingreso: código por correo, passkeys y contraseña opcional | Aceptado |
+| 0007 | Inscripción de alumnos (mostrador primero, aprobación configurable) | Aceptado |
