@@ -63,6 +63,28 @@ public class ServicioUsuarios {
                 """, String.class, normalizarEmail(email));
     }
 
+    /**
+     * Crea una cuenta INVITADA (sin contraseña: entra con código, ADR-0006) para quien se está inscribiendo.
+     * Se activa al terminar la ficha (ADR-0007).
+     *
+     * @return el id del usuario creado
+     * @throws IllegalStateException si el correo ya tiene cuenta en este gimnasio
+     */
+    public long crearInvitado(String email, String nombre) {
+        String correo = normalizarEmail(email);
+        if (idDe(correo).isPresent()) {
+            throw new IllegalStateException("El correo ya tiene cuenta en este gimnasio");
+        }
+        base.jdbc().update("INSERT INTO usuario (email, nombre, estado) VALUES (?, ?, 'INVITADO')", correo, nombre);
+        return idDe(correo).orElseThrow();
+    }
+
+    /** Id del usuario con ese correo en el gimnasio actual. */
+    public Optional<Long> idDe(String email) {
+        return base.jdbc().queryForList("SELECT id FROM usuario WHERE email = ?", Long.class, normalizarEmail(email))
+                .stream().findFirst();
+    }
+
     public Optional<String> nombreDe(String email) {
         return base.jdbc().queryForList("SELECT nombre FROM usuario WHERE email = ?", String.class, normalizarEmail(email))
                 .stream().findFirst();
